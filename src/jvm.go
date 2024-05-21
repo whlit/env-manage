@@ -22,7 +22,7 @@ type Config struct {
 var config = &Config{
 	Jhome: filepath.Clean(os.Getenv("JAVA_HOME")),
 	Jdks: make(map[string]string),
-	Root: filepath.Clean(os.Getenv("ENV_ROOT")),
+	Root: "",
 }
 
 func main() {
