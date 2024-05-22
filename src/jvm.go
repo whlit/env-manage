@@ -148,6 +148,7 @@ func help() {
 	fmt.Println("jvm rm <name>           Remove a JDK")
 	fmt.Println("jvm list                List all installed JDKs")
 	fmt.Println("jvm use <name>          Use a JDK")
+	fmt.Println("jvm home <path>         Set the path of JAVA_HOME")
 }
 
 func fileExists(path string) bool {
