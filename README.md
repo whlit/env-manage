@@ -10,7 +10,7 @@
 
 构建可执行文件
 
-```bash
+```powershell
 ./build.cmd
 ```
 
@@ -18,27 +18,35 @@
 
 JVM (Java Version Manager). Java 版本管理，并不是Java虚拟机的意思。
 
+### 设置JAVA_HOME
+
+设置JAVA_HOME环境变量的值，也就是生成的快捷方式的路径。
+
+```powershell
+jvm home [path]  # 例如 jvm home D:\soft\jdk
+```
+
 ### 添加版本
 
-```bash
+```powershell
 jvm add [key] [path]  # 例如 jvm add jdk-11 D:\soft\java\jdk-11.0.2
 ```
 
 ### 切换版本
 
-```bash
+```powershell
 jvm use [key]  # 例如 jvm use jdk-11
 ```
 
 ### 删除版本
 
-```bash
+```powershell
 jvm rm [key]  # 例如 jvm rm jdk-11
 ```
 
 ### 查看版本
 
-```bash
+```powershell
 jvm list  # 查看所有添加的版本
 ```
 
