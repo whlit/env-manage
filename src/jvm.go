@@ -20,7 +20,7 @@ type Config struct {
 }
 
 var config = &Config{
-	Jhome: filepath.Clean(os.Getenv("JAVA_HOME")),
+	Jhome: "",
 	Jdks: make(map[string]string),
 	Root: "",
 }
@@ -41,8 +41,8 @@ func main() {
 		remove(args[2])
 	case "use":
 		use(args[2])
-	case "root":
-		root(args[2])
+	case "home":
+		home(args[2])
 	default:
 		help()
 	}
@@ -72,6 +72,10 @@ func remove(name string) {
 }
 
 func use(name string) {
+	if config.Jhome == "" {
+		fmt.Println("请先设置 home.     jvm home <path>")
+		return
+	}
 	home, _ := os.Lstat(config.Jhome)
 	if home != nil {
 		elevatedRun("rmdir", filepath.Clean(config.Jhome))
@@ -83,9 +87,9 @@ func use(name string) {
 	}
 }
 
-func root(rootPath string) {
-	if fileExists(rootPath) {
-		config.Root = rootPath
+func home(jhomePath string) {
+	if fileExists(jhomePath) {
+		config.Jhome = jhomePath
 		writeConfig()
 	}
 }
@@ -107,6 +111,9 @@ func init() {
 		yaml.Unmarshal(file, &yamlData)
 		if yamlData.Jdks != nil {
 			config.Jdks = yamlData.Jdks
+		}
+		if yamlData.Jdks != nil {
+			config.Jhome = yamlData.Jhome
 		}
 		return
 	}
