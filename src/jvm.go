@@ -1,28 +1,31 @@
 package main
 
 import (
-	"bytes"
-	"errors"
 	"fmt"
+	"io"
+	"io/fs"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
+	"strings"
 
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"gopkg.in/yaml.v3"
+
+	"github.com/whlit/env-manage/cmd"
+	"github.com/whlit/env-manage/util"
 )
 
 type Config struct {
-	Jdks map[string]string `yaml:"Jdks"`
-	Jhome string           `yaml:"Jhome"`
-	Root string            `yaml:"Root"`
+	Jdks  map[string]string `yaml:"Jdks"`
+	Jhome string            `yaml:"Jhome"`
+	Root  string            `yaml:"Root"`
 }
 
 var config = &Config{
 	Jhome: "",
-	Jdks: make(map[string]string),
-	Root: "",
+	Jdks:  make(map[string]string),
+	Root:  "",
 }
 
 func main() {
@@ -73,14 +76,18 @@ func remove(name string) {
 
 func use(name string) {
 	if config.Jhome == "" {
-		fmt.Println("请先设置 home.     jvm home <path>")
+		fmt.Println("请先设置 JAVA_HOME. 使用命令 jvm home <path>")
+		return
+	}
+	if config.Jdks[name] == "" {
+		fmt.Println("JDK 版本不存在")
 		return
 	}
 	home, _ := os.Lstat(config.Jhome)
 	if home != nil {
-		elevatedRun("rmdir", filepath.Clean(config.Jhome))
+		cmd.ElevatedRun("rmdir", filepath.Clean(config.Jhome))
 	}
-	_, err := elevatedRun("mklink", "/D", filepath.Clean(config.Jhome), filepath.Clean(config.Jdks[name]))
+	_, err := cmd.ElevatedRun("mklink", "/D", filepath.Clean(config.Jhome), filepath.Clean(config.Jdks[name]))
 	if err != nil {
 		errr, _ := simplifiedchinese.GB18030.NewDecoder().String(err.Error())
 		fmt.Println(errr)
@@ -88,20 +95,63 @@ func use(name string) {
 }
 
 func home(jhomePath string) {
-	if fileExists(jhomePath) {
-		config.Jhome = jhomePath
-		writeConfig()
+	if config.Jhome == jhomePath {
+		return
 	}
+	file, err := os.Stat(jhomePath)
+	if err != nil {
+		if strings.Contains(filepath.Base(jhomePath), ".") {
+			fmt.Println("JAVA_HOME需要是一个目录")
+			return
+		}
+		os.MkdirAll(filepath.Dir(jhomePath), fs.ModeDir)
+		setJavaHome(jhomePath)
+		return
+	}
+	if !file.IsDir() {
+		fmt.Println("JAVA_HOME需要是一个目录")
+		return
+	}
+	dir, err := os.Open(jhomePath)
+	if err != nil {
+		fmt.Println("获取目录失败")
+		return
+	}
+	defer dir.Close()
+	_, err = dir.Readdir(1)
+	if err != io.EOF {
+		fmt.Println("目录必须为一个空目录,或者不存在的目录")
+		return
+	}
+    err = os.Remove(jhomePath)
+	if err != nil {
+		fmt.Println("删除目录失败", err)
+	}
+	setJavaHome(jhomePath)
+}
+
+func setJavaHome(jhome string) {
+	config.Jhome = jhome
+	cmd.SetEnvironmentValue("JAVA_HOME", jhome)
+	writeConfig()
+	fmt.Println("设置JAVA_HOME成功,需要重启终端生效")
 }
 
 func init() {
-	exePath, err := os.Executable()
+	// 加载配置文件
+	loadConfig()
+	// 初始化JAVA_HOME到Path
+	addPath()
+}
+
+func loadConfig() {
+	root, err := util.GetRootDir()
 	if err != nil {
-		fmt.Println("获取可执行文件失败")
-		return
+		fmt.Println("获取根目录失败")
+		os.Exit(1)
 	}
-	config.Root = filepath.Dir(exePath)
-	var configFile = path.Join(filepath.Dir(exePath), "jvm.yml")
+	var configFile = path.Join(root, "jvm.yml")
+	// 读取配置文件
 	if fileExists(configFile) {
 		file, err := os.ReadFile(configFile)
 		if err != nil {
@@ -109,38 +159,48 @@ func init() {
 		}
 		var yamlData = &Config{}
 		yaml.Unmarshal(file, &yamlData)
+		// 设置 JDK 列表
 		if yamlData.Jdks != nil {
 			config.Jdks = yamlData.Jdks
 		}
-		if yamlData.Jdks != nil {
-			config.Jhome = yamlData.Jhome
+		// 设置 JAVA_HOME
+		config.Jhome = yamlData.Jhome
+		// 设置根目录
+		if yamlData.Root != "" {
+			config.Root = yamlData.Root
+		} else {
+			config.Root = root
 		}
 		return
+	} else {
+		os.Create(configFile)
+		config.Root = root
+		writeConfig()
 	}
-	os.Create(configFile)
 }
 
-func elevatedRun(name string, arg ...string) (bool, error) {
-	ok, err := run("cmd", nil, append([]string{"/C", name}, arg...)...)
+func addPath() {
+	pathEnv, err := cmd.GetEnvironmentValue("Path")
 	if err != nil {
-		ok, err = run("elevate.cmd", &config.Root, append([]string{"cmd", "/C", name}, arg...)...)
+		fmt.Println("获取Path环境变量失败")
 	}
-	return ok, err
-}
-
-func run(name string, dir *string, arg ...string) (bool, error) {
-	c := exec.Command(name, arg...)
-	if dir != nil {
-		c.Dir = *dir
+	paths := strings.Split(pathEnv, ";")
+	var flag = false
+	for _, item := range paths {
+		if strings.Contains(item, "%JAVA_HOME%\\bin") {
+			flag = true
+		}
 	}
-	var stderr bytes.Buffer
-	c.Stderr = &stderr
-	err := c.Run()
-	if err != nil {
-		return false, errors.New(fmt.Sprint(err) + ": " + stderr.String())
+	if !flag {
+		var newPaths []string
+		for _, item := range paths {
+			if item != "" {
+				newPaths = append(newPaths, item)
+			}
+		}
+		newPaths = append(newPaths, "%JAVA_HOME%\\bin")
+		cmd.SetEnvironmentValue("Path", strings.Join(newPaths, ";"))
 	}
-
-	return true, nil
 }
 
 func help() {
