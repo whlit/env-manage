@@ -47,6 +47,8 @@ func main() {
 		use(args[2])
 	case "home":
 		home(args[2])
+    case "global":
+        global(args[2])
 	default:
 		help()
 	}
@@ -145,6 +147,37 @@ func home(jhomePath string) {
 	setJavaHome(jhomePath)
 }
 
+func global(action string) {
+	switch action {
+	case "install":
+        install()
+	case "uninstall":
+        unInstall()
+	default:
+		help()
+	}
+}
+
+func install() {
+    root, err := util.GetRootDir()
+    if err != nil {
+		fmt.Println("获取根目录失败")
+		os.Exit(1)
+	}
+    cmd.AddToPath(root)
+    fmt.Println("安装成功,请重新打开终端使用")
+}
+
+func unInstall() {
+    root, err := util.GetRootDir()
+    if err != nil {
+		fmt.Println("获取根目录失败")
+		os.Exit(1)
+	}
+    cmd.RemoveFromPath(root)
+    fmt.Println("卸载成功")
+}
+
 func setJavaHome(jhome string) {
 	config.Jhome = jhome
 	cmd.SetEnvironmentValue("JAVA_HOME", jhome)
@@ -156,7 +189,7 @@ func init() {
 	// 加载配置文件
 	loadConfig()
 	// 初始化JAVA_HOME到Path
-	addPath()
+	cmd.AddToPath("%JAVA_HOME%\\bin")
 }
 
 func loadConfig() {
@@ -194,50 +227,14 @@ func loadConfig() {
 	}
 }
 
-func addPath() {
-	root, err := util.GetRootDir()
-    if err != nil {
-		fmt.Println("获取根目录失败")
-		os.Exit(1)
-	}
-	pathEnv, err := cmd.GetEnvironmentValue("Path")
-	if err != nil {
-		fmt.Println("获取Path环境变量失败")
-	}
-	paths := strings.Split(pathEnv, ";")
-	var hasJhome = false
-    var hasRoot = false
-	for _, item := range paths {
-		if strings.Contains(item, "%JAVA_HOME%\\bin") {
-			hasJhome = true
-		}
-        if strings.Contains(item, root){
-            hasRoot = true
-        }
-	}
-	if !hasJhome || !hasRoot {
-		var newPaths []string
-		for _, item := range paths {
-			if item != "" {
-				newPaths = append(newPaths, item)
-			}
-		}
-        if !hasRoot {
-            newPaths = append(newPaths, root)
-        }
-        if !hasJhome {
-            newPaths = append(newPaths, "%JAVA_HOME%\\bin")
-        }
-		cmd.SetEnvironmentValue("Path", strings.Join(newPaths, ";"))
-	}
-}
 
 func help() {
-	fmt.Println("jvm add <name> <path>   Add a JDK")
-	fmt.Println("jvm rm <name>           Remove a JDK")
-	fmt.Println("jvm list                List all installed JDKs")
-	fmt.Println("jvm use <name>          Use a JDK")
-	fmt.Println("jvm home <path>         Set the path of JAVA_HOME")
+	fmt.Println("jvm add <name> <path>               Add a JDK")
+	fmt.Println("jvm rm <name>                       Remove a JDK")
+	fmt.Println("jvm list                            List all installed JDKs")
+	fmt.Println("jvm use <name>                      Use a JDK")
+	fmt.Println("jvm home <path>                     Set the path of JAVA_HOME")
+    fmt.Println("jvm global <install/uninstall>      Install jvm to system")
 }
 
 func fileExists(path string) bool {

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
+	"strings"
 
 	"github.com/whlit/env-manage/logger"
 	"github.com/whlit/env-manage/util"
@@ -59,6 +60,52 @@ func SetEnvironmentValue(name string, value string) error {
 	logger.Info("写入环境变量:%s, \n    旧值:'%s',  \n    新值:'%s'", name, oldValue, value)
 	_, err = Run("reg", nil, "add", "HKEY_CURRENT_USER\\Environment", "/v", name, "/t", "REG_SZ", "/d", value, "/f")
 	return err
+}
+
+func AddToPath(value string) {
+	pathEnv, err := GetEnvironmentValue("Path")
+	if err != nil {
+		fmt.Println("获取Path环境变量失败")
+	}
+	paths := strings.Split(pathEnv, ";")
+	var existed = false
+	for _, item := range paths {
+		if strings.Contains(item, value) {
+			existed = true
+		}
+	}
+	if !existed {
+		var newPaths []string
+		for _, item := range paths {
+			if item != "" {
+				newPaths = append(newPaths, item)
+			}
+		}
+		if !existed {
+			newPaths = append(newPaths, value)
+		}
+		SetEnvironmentValue("Path", strings.Join(newPaths, ";"))
+	}
+}
+
+func RemoveFromPath(value string) {
+	pathEnv, err := GetEnvironmentValue("Path")
+	if err != nil {
+		fmt.Println("获取Path环境变量失败")
+	}
+	paths := strings.Split(pathEnv, ";")
+	var newPaths []string
+	var existed = false
+	for _, item := range paths {
+		if item == value {
+			existed = true
+			continue
+		}
+		newPaths = append(newPaths, item)
+	}
+    if existed {
+        SetEnvironmentValue("Path", strings.Join(newPaths, ";"))
+    }
 }
 
 // 运行命令
