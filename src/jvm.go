@@ -195,25 +195,39 @@ func loadConfig() {
 }
 
 func addPath() {
+	root, err := util.GetRootDir()
+    if err != nil {
+		fmt.Println("获取根目录失败")
+		os.Exit(1)
+	}
 	pathEnv, err := cmd.GetEnvironmentValue("Path")
 	if err != nil {
 		fmt.Println("获取Path环境变量失败")
 	}
 	paths := strings.Split(pathEnv, ";")
-	var flag = false
+	var hasJhome = false
+    var hasRoot = false
 	for _, item := range paths {
 		if strings.Contains(item, "%JAVA_HOME%\\bin") {
-			flag = true
+			hasJhome = true
 		}
+        if strings.Contains(item, root){
+            hasRoot = true
+        }
 	}
-	if !flag {
+	if !hasJhome || !hasRoot {
 		var newPaths []string
 		for _, item := range paths {
 			if item != "" {
 				newPaths = append(newPaths, item)
 			}
 		}
-		newPaths = append(newPaths, "%JAVA_HOME%\\bin")
+        if !hasRoot {
+            newPaths = append(newPaths, root)
+        }
+        if !hasJhome {
+            newPaths = append(newPaths, "%JAVA_HOME%\\bin")
+        }
 		cmd.SetEnvironmentValue("Path", strings.Join(newPaths, ";"))
 	}
 }
