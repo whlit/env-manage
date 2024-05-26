@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"golang.org/x/text/encoding/simplifiedchinese"
@@ -52,8 +53,22 @@ func main() {
 }
 
 func list() {
+	var used string
+	if config.Jhome != "" {
+		used, _ = os.Readlink(config.Jhome)
+	}
+	var ks, vs int
 	for k, v := range config.Jdks {
-		fmt.Println(k, v)
+		ks = max(ks, len(k))
+		vs = max(vs, len(v))
+	}
+	kf := " %s %-" + strconv.Itoa(ks) + "s   %-" + strconv.Itoa(vs) + "s\n"
+	for k, v := range config.Jdks {
+		if used == v {
+			fmt.Printf(kf, "*", k, v)
+		} else {
+			fmt.Printf(kf, " ", k, v)
+		}
 	}
 }
 
@@ -123,7 +138,7 @@ func home(jhomePath string) {
 		fmt.Println("目录必须为一个空目录,或者不存在的目录")
 		return
 	}
-    err = os.Remove(jhomePath)
+	err = os.Remove(jhomePath)
 	if err != nil {
 		fmt.Println("删除目录失败", err)
 	}
