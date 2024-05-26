@@ -50,4 +50,10 @@ jvm rm [key]  # 例如 jvm rm jdk-11
 jvm list  # 查看所有添加的版本
 ```
 
+### 作为全局命令安装
+
+```powershell
+jvm global install # 安装为全局命令
+jvm global uninstall # 卸载全局命令
+```
 
