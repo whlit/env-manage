@@ -8,7 +8,9 @@
 
 ## Installation
 
-构建可执行文件
+解压后安装目录下有`install.exe`和`uninstall.exe`,用于作为全局命令安装和卸载;
+
+也可自行构建可执行文件，构建的包在dist目录下
 
 ```powershell
 ./build.cmd
@@ -20,7 +22,7 @@ JVM (Java Version Manager). Java 版本管理，并不是Java虚拟机的意思�
 
 ### 设置JAVA_HOME
 
-设置JAVA_HOME环境变量的值，也就是生成的快捷方式的路径。
+设置JAVA_HOME环境变量的值，也就是生成的快捷方式的路径。默认使用`安装目录\runtime\jdk`
 
 ```powershell
 jvm home [path]  # 例如 jvm home D:\soft\jdk
@@ -35,7 +37,7 @@ jvm add [key] [path]  # 例如 jvm add jdk-11 D:\soft\java\jdk-11.0.2
 ### 切换版本
 
 ```powershell
-jvm use [key]  # 例如 jvm use jdk-11
+jvm use # 交互式选择使用的版本
 ```
 
 ### 删除版本
@@ -50,10 +52,4 @@ jvm rm [key]  # 例如 jvm rm jdk-11
 jvm list  # 查看所有添加的版本
 ```
 
-### 作为全局命令安装
-
-```powershell
-jvm global install # 安装为全局命令
-jvm global uninstall # 卸载全局命令
-```
 
