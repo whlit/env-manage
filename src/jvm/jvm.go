@@ -7,7 +7,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	"golang.org/x/exp/maps"
@@ -59,19 +58,20 @@ func list() {
 	if config.Jhome != "" {
 		used, _ = os.Readlink(config.Jhome)
 	}
-	var ks, vs int
-	for k, v := range config.Jdks {
-		ks = max(ks, len(k))
-		vs = max(vs, len(v))
+	table := util.Table{
+		Columns: []string{"Version", "Path"},
+		Selected: func(row map[string]string) bool {
+			return row["Path"] == used
+		},
 	}
-	kf := " %s %-" + strconv.Itoa(ks) + "s   %-" + strconv.Itoa(vs) + "s\n"
 	for k, v := range config.Jdks {
-		if used == v {
-			fmt.Printf(kf, "*", k, v)
-		} else {
-			fmt.Printf(kf, " ", k, v)
-		}
+		table.Add(map[string]string{
+			"Version": k,
+			"Path":    v,
+		})
 	}
+	table.Print()
+
 }
 
 func add(version string, jpath string) {
