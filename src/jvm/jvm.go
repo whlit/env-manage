@@ -10,9 +10,11 @@ import (
 	"strconv"
 	"strings"
 
+	"golang.org/x/exp/maps"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"gopkg.in/yaml.v3"
 
+	"github.com/manifoldco/promptui"
 	"github.com/whlit/env-manage/cmd"
 	"github.com/whlit/env-manage/util"
 )
@@ -44,7 +46,7 @@ func main() {
 	case "rm":
 		remove(args[2])
 	case "use":
-		use(args[2])
+		use()
 	case "home":
 		home(args[2])
 	default:
@@ -89,9 +91,18 @@ func remove(name string) {
 	writeConfig()
 }
 
-func use(name string) {
+func use() {
 	if config.Jhome == "" {
 		fmt.Println("请先设置 JAVA_HOME. 使用命令 jvm home <path>")
+		return
+	}
+	prompt := promptui.Select{
+		Label: "请选择 JDK 版本",
+		Items: maps.Keys(config.Jdks),
+	}
+	_, name, err := prompt.Run()
+	if err != nil {
+		fmt.Println(err)
 		return
 	}
 	if config.Jdks[name] == "" {
@@ -102,11 +113,13 @@ func use(name string) {
 	if home != nil {
 		cmd.ElevatedRun("rmdir", filepath.Clean(config.Jhome))
 	}
-	_, err := cmd.ElevatedRun("mklink", "/D", filepath.Clean(config.Jhome), filepath.Clean(config.Jdks[name]))
+	_, err = cmd.ElevatedRun("mklink", "/D", filepath.Clean(config.Jhome), filepath.Clean(config.Jdks[name]))
 	if err != nil {
 		errr, _ := simplifiedchinese.GB18030.NewDecoder().String(err.Error())
 		fmt.Println(errr)
+		return
 	}
+	fmt.Println("成功切换JAVA版本为", name)
 }
 
 func home(jhomePath string) {
@@ -186,19 +199,18 @@ func loadConfig() {
 	} else {
 		os.Create(configFile)
 		config.Root = root
-        config.Jhome = path.Join(root, "runtime/jdk")
-        util.MkBaseDir(config.Jhome)
+		config.Jhome = path.Join(root, "runtime/jdk")
+		util.MkBaseDir(config.Jhome)
 		writeConfig()
 	}
 }
 
-
 func help() {
-	fmt.Println("jvm add <name> <path>               Add a JDK")
-	fmt.Println("jvm rm <name>                       Remove a JDK")
-	fmt.Println("jvm list                            List all installed JDKs")
-	fmt.Println("jvm use <name>                      Use a JDK")
-	fmt.Println("jvm home <path>                     Set the path of JAVA_HOME")
+	fmt.Println("jvm add <name> <path>           Add a JDK")
+	fmt.Println("jvm rm <name>                   Remove a JDK")
+	fmt.Println("jvm list                        List all installed JDKs")
+	fmt.Println("jvm use                         Select And Use a JDK")
+	fmt.Println("jvm home <path>                 Set the path of JAVA_HOME")
 }
 
 func fileExists(path string) bool {
@@ -213,4 +225,3 @@ func writeConfig() {
 	}
 	os.WriteFile(util.GetConfigFilePath("jvm.yml"), data, 0644)
 }
-
