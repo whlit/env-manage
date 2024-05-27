@@ -1,8 +1,6 @@
 @echo off
 
-if exist src\jvm.exe (
-  del src\jvm.exe
-)
+SET ROOT_DIR=%CD%
 
 if exist dist (
   rmdir /s /q dist
@@ -10,11 +8,13 @@ if exist dist (
 
 mkdir dist\unpack
 
-cd .\src
+cd .\src\jvm
+if exist jvm.exe (
+  del jvm.exe
+)
 go build jvm.go
-cd ..\
-
-move src\jvm.exe dist\unpack
+move jvm.exe %ROOT_DIR%\dist\unpack
+cd ..\..\
 
 copy bin\elevate.cmd dist\unpack\elevate.cmd
 copy bin\elevate.vbs dist\unpack\elevate.vbs

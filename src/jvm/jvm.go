@@ -148,34 +148,21 @@ func home(jhomePath string) {
 }
 
 func global(action string) {
+    root, err := util.GetRootDir()
+    if err != nil {
+		fmt.Println("获取根目录失败")
+		os.Exit(1)
+	}
 	switch action {
 	case "install":
-        install()
+        cmd.AddToPath(root)
+        fmt.Println("安装成功,请重新打开终端使用")
 	case "uninstall":
-        unInstall()
+        cmd.RemoveFromPath(root)
+        fmt.Println("卸载成功")
 	default:
 		help()
 	}
-}
-
-func install() {
-    root, err := util.GetRootDir()
-    if err != nil {
-		fmt.Println("获取根目录失败")
-		os.Exit(1)
-	}
-    cmd.AddToPath(root)
-    fmt.Println("安装成功,请重新打开终端使用")
-}
-
-func unInstall() {
-    root, err := util.GetRootDir()
-    if err != nil {
-		fmt.Println("获取根目录失败")
-		os.Exit(1)
-	}
-    cmd.RemoveFromPath(root)
-    fmt.Println("卸载成功")
 }
 
 func setJavaHome(jhome string) {
@@ -249,3 +236,4 @@ func writeConfig() {
 	}
 	os.WriteFile(path.Join(config.Root, "jvm.yml"), data, 0644)
 }
+
