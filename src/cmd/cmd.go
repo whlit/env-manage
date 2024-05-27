@@ -19,21 +19,15 @@ func SetUserEnvVar(name string, value string) {
 
 // 提升权限运行
 func ElevatedRun(name string, arg ...string) (bool, error) {
-	ok, err := Run("cmd", nil, append([]string{"/C", name}, arg...)...)
+	ok, err := run("cmd", nil, append([]string{"/C", name}, arg...)...)
 	if err != nil {
-		root, e := util.GetRootDir()
-		if e != nil {
-			return false, err
-		}
-		ok, err = Run("elevate.cmd", &root, append([]string{"cmd", "/C", name}, arg...)...)
+		root := util.GetRootDir()
+		ok, err = run("elevate.cmd", &root, append([]string{"cmd", "/C", name}, arg...)...)
 	}
 	return ok, err
 }
 
-func CmdRun(name string, arg ...string) (bool, error) {
-	return Run("cmd", nil, append([]string{"/C", name}, arg...)...)
-}
-
+// 获取注册表项
 func GetEnvironmentValue(name string) (string, error) {
 	key, err := registry.OpenKey(registry.CURRENT_USER, "Environment", registry.QUERY_VALUE)
 	if err != nil {
@@ -49,6 +43,7 @@ func GetEnvironmentValue(name string) (string, error) {
 	return value, nil
 }
 
+// 写入注册表项
 func SetEnvironmentValue(name string, value string) error {
 	key, err := registry.OpenKey(registry.CURRENT_USER, "Environment", registry.QUERY_VALUE)
 	if err != nil {
@@ -58,10 +53,11 @@ func SetEnvironmentValue(name string, value string) error {
 	defer key.Close()
 	oldValue, _, _ := key.GetStringValue(name)
 	logger.Info("写入环境变量:%s, \n    旧值:'%s',  \n    新值:'%s'", name, oldValue, value)
-	_, err = Run("reg", nil, "add", "HKEY_CURRENT_USER\\Environment", "/v", name, "/t", "REG_SZ", "/d", value, "/f")
+	_, err = run("reg", nil, "add", "HKEY_CURRENT_USER\\Environment", "/v", name, "/t", "REG_SZ", "/d", value, "/f")
 	return err
 }
 
+// 向PATH添加目录
 func AddToPath(value string) {
 	pathEnv, err := GetEnvironmentValue("Path")
 	if err != nil {
@@ -88,6 +84,7 @@ func AddToPath(value string) {
 	}
 }
 
+// 从PATH中移除目录
 func RemoveFromPath(value string) {
 	pathEnv, err := GetEnvironmentValue("Path")
 	if err != nil {
@@ -109,7 +106,7 @@ func RemoveFromPath(value string) {
 }
 
 // 运行命令
-func Run(name string, dir *string, arg ...string) (bool, error) {
+func run(name string, dir *string, arg ...string) (bool, error) {
 	c := exec.Command(name, arg...)
 	if dir != nil {
 		c.Dir = *dir

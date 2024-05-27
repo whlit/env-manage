@@ -1,7 +1,6 @@
 package logger
 
 import (
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -14,11 +13,7 @@ var logger *log.Logger
 
 
 func init() {
-	root, err := util.GetRootDir()
-	if err != nil {
-		fmt.Println("获取根目录失败", err)
-		os.Exit(1)
-	}
+	root := util.GetRootDir()
 	file, err := os.OpenFile(filepath.Join(root, "sys.log"), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
     if err != nil {
         log.Fatalln("打开文件失败:", err)

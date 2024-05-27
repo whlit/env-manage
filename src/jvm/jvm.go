@@ -148,11 +148,7 @@ func home(jhomePath string) {
 }
 
 func global(action string) {
-    root, err := util.GetRootDir()
-    if err != nil {
-		fmt.Println("获取根目录失败")
-		os.Exit(1)
-	}
+    root := util.GetRootDir()
 	switch action {
 	case "install":
         cmd.AddToPath(root)
@@ -180,11 +176,7 @@ func init() {
 }
 
 func loadConfig() {
-	root, err := util.GetRootDir()
-	if err != nil {
-		fmt.Println("获取根目录失败")
-		os.Exit(1)
-	}
+	root := util.GetRootDir()
 	var configFile = path.Join(root, "jvm.yml")
 	// 读取配置文件
 	if fileExists(configFile) {
@@ -210,6 +202,8 @@ func loadConfig() {
 	} else {
 		os.Create(configFile)
 		config.Root = root
+        config.Jhome = path.Join(root, "runtime/jdk")
+        util.MkBaseDir(config.Jhome)
 		writeConfig()
 	}
 }
