@@ -177,7 +177,7 @@ func init() {
 
 func loadConfig() {
 	root := util.GetRootDir()
-	var configFile = path.Join(root, "jvm.yml")
+	var configFile = util.GetConfigFilePath("jvm.yml")
 	// 读取配置文件
 	if fileExists(configFile) {
 		file, err := os.ReadFile(configFile)
@@ -228,6 +228,6 @@ func writeConfig() {
 	if err != nil {
 		fmt.Println("保存配置文件失败")
 	}
-	os.WriteFile(path.Join(config.Root, "jvm.yml"), data, 0644)
+	os.WriteFile(util.GetConfigFilePath("jvm.yml"), data, 0644)
 }
 

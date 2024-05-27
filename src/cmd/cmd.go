@@ -22,7 +22,7 @@ func ElevatedRun(name string, arg ...string) (bool, error) {
 	ok, err := run("cmd", nil, append([]string{"/C", name}, arg...)...)
 	if err != nil {
 		root := util.GetRootDir()
-		ok, err = run("elevate.cmd", &root, append([]string{"cmd", "/C", name}, arg...)...)
+		ok, err = run(".\\lib\\elevate.cmd", &root, append([]string{"cmd", "/C", name}, arg...)...)
 	}
 	return ok, err
 }
