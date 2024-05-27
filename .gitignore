@@ -1,5 +1,3 @@
 cache/
 dist/
-*.yml
-*.exe
-*.log
+src/**/*.exe
