@@ -47,8 +47,6 @@ func main() {
 		use(args[2])
 	case "home":
 		home(args[2])
-    case "global":
-        global(args[2])
 	default:
 		help()
 	}
@@ -147,20 +145,6 @@ func home(jhomePath string) {
 	setJavaHome(jhomePath)
 }
 
-func global(action string) {
-    root := util.GetRootDir()
-	switch action {
-	case "install":
-        cmd.AddToPath(root)
-        fmt.Println("安装成功,请重新打开终端使用")
-	case "uninstall":
-        cmd.RemoveFromPath(root)
-        fmt.Println("卸载成功")
-	default:
-		help()
-	}
-}
-
 func setJavaHome(jhome string) {
 	config.Jhome = jhome
 	cmd.SetEnvironmentValue("JAVA_HOME", jhome)
@@ -215,7 +199,6 @@ func help() {
 	fmt.Println("jvm list                            List all installed JDKs")
 	fmt.Println("jvm use <name>                      Use a JDK")
 	fmt.Println("jvm home <path>                     Set the path of JAVA_HOME")
-    fmt.Println("jvm global <install/uninstall>      Install jvm to system")
 }
 
 func fileExists(path string) bool {
