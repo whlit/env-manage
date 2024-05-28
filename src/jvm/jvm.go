@@ -13,7 +13,7 @@ import (
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"gopkg.in/yaml.v3"
 
-	"github.com/manifoldco/promptui"
+	"github.com/charmbracelet/huh"
 	"github.com/whlit/env-manage/cmd"
 	"github.com/whlit/env-manage/util"
 )
@@ -31,7 +31,6 @@ var config = &Config{
 }
 
 func main() {
-    fmt.Println(util.GetExeName())
 	args := os.Args
 	action := ""
 	if len(args) > 1 {
@@ -49,6 +48,8 @@ func main() {
 		use()
 	case "home":
 		home(args[2])
+	case "install":
+		install()
 	default:
 		help()
 	}
@@ -86,13 +87,13 @@ func add(version string, jpath string) {
 		fmt.Println("路径不是 JDK 路径")
 	}
 	config.Jdks[version] = jpath
-    util.SaveConfig(config)
+	util.SaveConfig(config)
 }
 
 // 移除 JDK
 func remove(name string) {
 	delete(config.Jdks, name)
-    util.SaveConfig(config)
+	util.SaveConfig(config)
 }
 
 // 切换 JDK
@@ -101,15 +102,12 @@ func use() {
 		fmt.Println("请先设置 JAVA_HOME. 使用命令 jvm home <path>")
 		return
 	}
-	prompt := promptui.Select{
-		Label: "请选择 JDK 版本",
-		Items: maps.Keys(config.Jdks),
-	}
-	_, name, err := prompt.Run()
-	if err != nil {
-		fmt.Println(err)
+	if config.Jdks == nil || len(config.Jdks) == 0 {
+		fmt.Println("未添加任何JDK版本")
 		return
 	}
+	var name string
+	huh.NewSelect[string]().Options(huh.NewOptions(maps.Keys(config.Jdks)...)...).Value(&name).Run()
 	if config.Jdks[name] == "" {
 		fmt.Println("JDK 版本不存在")
 		return
@@ -118,7 +116,7 @@ func use() {
 	if home != nil {
 		cmd.ElevatedRun("rmdir", filepath.Clean(config.Jhome))
 	}
-	_, err = cmd.ElevatedRun("mklink", "/D", filepath.Clean(config.Jhome), filepath.Clean(config.Jdks[name]))
+	_, err := cmd.ElevatedRun("mklink", "/D", filepath.Clean(config.Jhome), filepath.Clean(config.Jdks[name]))
 	if err != nil {
 		errr, _ := simplifiedchinese.GB18030.NewDecoder().String(err.Error())
 		fmt.Println(errr)
@@ -126,6 +124,7 @@ func use() {
 	}
 	fmt.Println("成功切换JAVA版本为", name)
 }
+
 // 设置 JAVA_HOME
 func home(jhomePath string) {
 	if config.Jhome == jhomePath {
@@ -163,12 +162,19 @@ func home(jhomePath string) {
 	setJavaHome(jhomePath)
 }
 
+func install() {
+	var version string
+	huh.NewSelect[string]().Options(huh.NewOptions(getDownloadVersions()...)...).Value(&version).Run()
+	fmt.Println("开始安装JDK", version)
+}
+
 func setJavaHome(jhome string) {
 	config.Jhome = jhome
 	cmd.SetEnvironmentValue("JAVA_HOME", jhome)
-    util.SaveConfig(config)
+	util.SaveConfig(config)
 	fmt.Println("设置JAVA_HOME成功,需要重启终端生效")
 }
+
 // 初始化
 func init() {
 	// 加载配置文件
@@ -221,4 +227,42 @@ func help() {
 func fileExists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
+}
+
+type DownloadInfo struct {
+	Version      string
+	Url          string
+	CheckCodeUrl string
+	CheckType    string
+}
+
+func getDownloads() []DownloadInfo {
+	return []DownloadInfo{
+		{
+			Version:      "jdk22",
+			Url:          "https://download.oracle.com/java/22/latest/jdk-22_windows-x64_bin.zip",
+			CheckType:    "sha256",
+			CheckCodeUrl: "https://download.oracle.com/java/22/latest/jdk-22_windows-x64_bin.zip.sha256",
+		},
+		{
+			Version:      "jdk21",
+			Url:          "https://download.oracle.com/java/21/latest/jdk-21_windows-x64_bin.zip",
+			CheckType:    "sha256",
+			CheckCodeUrl: "https://download.oracle.com/java/21/latest/jdk-21_windows-x64_bin.zip.sha256",
+		},
+		{
+			Version:      "jdk17",
+			Url:          "https://download.oracle.com/java/17/latest/jdk-17_windows-x64_bin.zip",
+			CheckType:    "sha256",
+			CheckCodeUrl: "https://download.oracle.com/java/17/latest/jdk-17_windows-x64_bin.zip.sha256",
+		},
+	}
+}
+
+func getDownloadVersions() []string {
+	var versions []string
+	for _, d := range getDownloads() {
+		versions = append(versions, d.Version)
+	}
+	return versions
 }
