@@ -306,14 +306,6 @@ func getDownloads() []DownloadInfo {
 	}
 }
 
-func getDownloadVersions() []string {
-	var versions []string
-	for _, d := range getDownloads() {
-		versions = append(versions, d.Version)
-	}
-	return versions
-}
-
 func getDownloadFilePath(info DownloadInfo) string {
 	fileName := filepath.Base(info.Url)
 	// todo 从root 目录下创建一个临时目录
