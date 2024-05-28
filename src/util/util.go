@@ -1,11 +1,12 @@
 package util
 
 import (
+	"archive/zip"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -72,55 +73,67 @@ func SaveConfig(config interface{}){
 	os.WriteFile(GetConfigFilePath(), data, 0644)
 }
 
-type Table struct {
-	Columns  []string
-	Selected func(map[string]string) bool
-	data     []map[string]string
-	lens     map[string]int
-}
 
-func (t *Table) Print() {
-	// 打印列名
-	if t.Columns == nil {
-		return
+func Unzip(zipPath, dir string) error {
+	r, err := zip.OpenReader(zipPath)
+	if err != nil {
+		return err
 	}
-	if t.Selected != nil {
-		fmt.Print("   ")
-	}
-	var formats map[string]string = make(map[string]string)
-	for _, column := range t.Columns {
-		formats[column] = strings.Join([]string{"%-", strconv.Itoa(max(t.lens[column], len(column))), "s   "}, "")
-		fmt.Printf(formats[column], column)
-	}
-	fmt.Print("\n")
-	// 打印数据
-	if t.data == nil {
-		return
-	}
-	for _, row := range t.data {
-		// 是否打印选中标记
-		if t.Selected != nil {
-			if t.Selected(row) {
-				fmt.Print(" * ")
-			} else {
-				fmt.Print("   ")
+	defer func() {
+		if err := r.Close(); err != nil {
+			panic(err)
+		}
+	}()
+
+	os.MkdirAll(dir, 0755)
+
+	// Closure to address file descriptors issue with all the deferred .Close() methods
+	extractAndWriteFile := func(f *zip.File) error {
+		rc, err := f.Open()
+		if err != nil {
+			return err
+		}
+		defer func() {
+			if err := rc.Close(); err != nil {
+				panic(err)
+			}
+		}()
+
+		path := filepath.Join(dir, f.Name)
+
+		// Check for ZipSlip (Directory traversal)
+		if !strings.HasPrefix(path, filepath.Clean(dir)+string(os.PathSeparator)) {
+			return fmt.Errorf("illegal file path: %s", path)
+		}
+
+		if f.FileInfo().IsDir() {
+			os.MkdirAll(path, f.Mode())
+		} else {
+			os.MkdirAll(filepath.Dir(path), f.Mode())
+			f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
+			if err != nil {
+				return err
+			}
+			defer func() {
+				if err := f.Close(); err != nil {
+					panic(err)
+				}
+			}()
+
+			_, err = io.Copy(f, rc)
+			if err != nil {
+				return err
 			}
 		}
-		for _, column := range t.Columns {
-			fmt.Printf(formats[column], row[column])
-		}
-		fmt.Print("\n")
+		return nil
 	}
-}
 
-func (t *Table) Add(rows ...map[string]string) {
-	if t.lens == nil {
-		t.lens = make(map[string]int)
-	}
-	for _, row := range rows {
-		for _, column := range t.Columns {
-			t.lens[column] = max(t.lens[column], len(row[column]))
+	for _, f := range r.File {
+		err := extractAndWriteFile(f)
+		if err != nil {
+			return err
 		}
 	}
-	t.data = append(t.data, rows...)
+
+	return nil
 }

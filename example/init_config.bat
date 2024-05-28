@@ -8,4 +8,3 @@ jvm add jdk17 D:\soft\java\jdk17
 
 jvm add jdk21 D:\soft\java\jdk21
 
-jvm list

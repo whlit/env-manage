@@ -16,7 +16,7 @@ func TestTablePrint(t *testing.T) {
 		"name": "Janeh",
 		"age":  "25",
 	})
-	table.Print()
+	table.Printf()
 }
 
 func TestGetExeName(t *testing.T) {
