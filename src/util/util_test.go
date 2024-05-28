@@ -18,3 +18,8 @@ func TestTablePrint(t *testing.T) {
 	})
 	table.Print()
 }
+
+func TestGetExeName(t *testing.T) {
+	name := GetExeName()
+	t.Log(name)
+}

@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"gopkg.in/yaml.v3"
 )
 
 // 获取根目录 获取失败则直接退出程序
@@ -32,6 +34,17 @@ func GetExeDir() string {
 	return filepath.Dir(exePath)
 }
 
+// 获取当前可执行文件名称 不带后缀
+func GetExeName() string {
+	exePath, err := os.Executable()
+	if err != nil {
+		fmt.Println("获取可执行文件目录失败")
+		os.Exit(1)
+	}
+    name := filepath.Base(exePath)
+	return strings.TrimSuffix(name, filepath.Ext(name))
+}
+
 // 创建最后一个分隔符之前的目录
 func MkBaseDir(path string) {
 	_, err := os.Stat(path)
@@ -44,10 +57,19 @@ func MkBaseDir(path string) {
 }
 
 // 获取配置文件路径
-func GetConfigFilePath(name string) string {
-	path := filepath.Join(GetRootDir(), "config", name)
+func GetConfigFilePath() string {
+	path := filepath.Join(GetRootDir(), "config", strings.Join([]string{GetExeName(), ".yml"}, ""))
 	MkBaseDir(path)
 	return path
+}
+
+// 保存配置
+func SaveConfig(config interface{}){
+    data, err := yaml.Marshal(config)
+	if err != nil {
+		fmt.Println("保存配置文件失败")
+	}
+	os.WriteFile(GetConfigFilePath(), data, 0644)
 }
 
 type Table struct {

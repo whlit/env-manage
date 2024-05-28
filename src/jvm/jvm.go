@@ -31,6 +31,7 @@ var config = &Config{
 }
 
 func main() {
+    fmt.Println(util.GetExeName())
 	args := os.Args
 	action := ""
 	if len(args) > 1 {
@@ -53,6 +54,7 @@ func main() {
 	}
 }
 
+// 列出所有已安装 JDK
 func list() {
 	var used string
 	if config.Jhome != "" {
@@ -74,6 +76,7 @@ func list() {
 
 }
 
+// 添加 JDK
 func add(version string, jpath string) {
 	if !fileExists(jpath) {
 		fmt.Println("路径不存在")
@@ -83,14 +86,16 @@ func add(version string, jpath string) {
 		fmt.Println("路径不是 JDK 路径")
 	}
 	config.Jdks[version] = jpath
-	writeConfig()
+    util.SaveConfig(config)
 }
 
+// 移除 JDK
 func remove(name string) {
 	delete(config.Jdks, name)
-	writeConfig()
+    util.SaveConfig(config)
 }
 
+// 切换 JDK
 func use() {
 	if config.Jhome == "" {
 		fmt.Println("请先设置 JAVA_HOME. 使用命令 jvm home <path>")
@@ -121,7 +126,7 @@ func use() {
 	}
 	fmt.Println("成功切换JAVA版本为", name)
 }
-
+// 设置 JAVA_HOME
 func home(jhomePath string) {
 	if config.Jhome == jhomePath {
 		return
@@ -161,10 +166,10 @@ func home(jhomePath string) {
 func setJavaHome(jhome string) {
 	config.Jhome = jhome
 	cmd.SetEnvironmentValue("JAVA_HOME", jhome)
-	writeConfig()
+    util.SaveConfig(config)
 	fmt.Println("设置JAVA_HOME成功,需要重启终端生效")
 }
-
+// 初始化
 func init() {
 	// 加载配置文件
 	loadConfig()
@@ -174,7 +179,7 @@ func init() {
 
 func loadConfig() {
 	root := util.GetRootDir()
-	var configFile = util.GetConfigFilePath("jvm.yml")
+	var configFile = util.GetConfigFilePath()
 	// 读取配置文件
 	if fileExists(configFile) {
 		file, err := os.ReadFile(configFile)
@@ -201,7 +206,7 @@ func loadConfig() {
 		config.Root = root
 		config.Jhome = path.Join(root, "runtime/jdk")
 		util.MkBaseDir(config.Jhome)
-		writeConfig()
+		util.SaveConfig(config)
 	}
 }
 
@@ -216,12 +221,4 @@ func help() {
 func fileExists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
-}
-
-func writeConfig() {
-	data, err := yaml.Marshal(config)
-	if err != nil {
-		fmt.Println("保存配置文件失败")
-	}
-	os.WriteFile(util.GetConfigFilePath("jvm.yml"), data, 0644)
 }
