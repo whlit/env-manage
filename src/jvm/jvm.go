@@ -253,7 +253,8 @@ func loadConfig() {
 	} else {
 		os.Create(configFile)
 		config.Root = root
-		config.Jhome = path.Join(root, "runtime/jdk")
+		config.Jhome = path.Join(root, "runtime", "jdk")
+        setJavaHome(config.Jhome)
 		util.MkBaseDir(config.Jhome)
 		util.SaveConfig(config)
 	}
