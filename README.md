@@ -52,4 +52,10 @@ jvm rm [key]  # 例如 jvm rm jdk-11
 jvm list  # 查看所有添加的版本
 ```
 
+### 在线安装JDK
+
+```powershell
+jvm install # 交互式选择安装的版本
+```
+
 
