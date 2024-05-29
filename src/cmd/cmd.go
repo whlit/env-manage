@@ -100,9 +100,9 @@ func RemoveFromPath(value string) {
 		}
 		newPaths = append(newPaths, item)
 	}
-    if existed {
-        SetEnvironmentValue("Path", strings.Join(newPaths, ";"))
-    }
+	if existed {
+		SetEnvironmentValue("Path", strings.Join(newPaths, ";"))
+	}
 }
 
 // 运行命令

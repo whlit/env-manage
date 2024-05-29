@@ -13,8 +13,8 @@ import (
 )
 
 type VersionDownload interface {
-    GetVersionKey() string
-    Download() (string, error)
+	GetVersionKey() string
+	Download() (string, error)
 }
 
 type EnvVersion struct {
@@ -39,11 +39,11 @@ type EnvVersion struct {
 	// 是否最新版本
 	Latest bool
 
-    // 文件名称
-    FileName string
+	// 文件名称
+	FileName string
 
-    // 下载文件路径
-    FilePath string
+	// 下载文件路径
+	FilePath string
 }
 
 func (v *EnvVersion) GetVersionKey() string {
@@ -73,7 +73,6 @@ func (v *EnvVersion) Check(filePath string) (bool, error) {
 	}
 	return true, nil
 }
-
 
 func (v *EnvVersion) Download(filePath string) bool {
 	// 文件已经存在，说明下载过了，需要校验一下和最新的是否一致，不一致则删除，重新下载

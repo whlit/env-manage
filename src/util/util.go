@@ -42,7 +42,7 @@ func GetExeName() string {
 		fmt.Println("获取可执行文件目录失败")
 		os.Exit(1)
 	}
-    name := filepath.Base(exePath)
+	name := filepath.Base(exePath)
 	return strings.TrimSuffix(name, filepath.Ext(name))
 }
 
@@ -65,8 +65,8 @@ func GetConfigFilePath() string {
 }
 
 // 保存配置
-func SaveConfig(config interface{}){
-    data, err := yaml.Marshal(config)
+func SaveConfig(config interface{}) {
+	data, err := yaml.Marshal(config)
 	if err != nil {
 		fmt.Println("保存配置文件失败")
 	}

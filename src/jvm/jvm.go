@@ -171,9 +171,15 @@ func install() {
 		options[i] = huh.NewOption(v.GetVersionKey(), v)
 	}
 	huh.NewSelect[version.VersionDownload]().Options(options...).Value(&info).Run()
+	var confirm bool
+	huh.NewConfirm().Title(strings.Join([]string{"确认安装 ", info.GetVersionKey(), " ?"}, "")).Value(&confirm).Run()
+	if !confirm {
+		fmt.Println("取消安装")
+		return
+	}
 	fmt.Println("开始安装JDK", info.GetVersionKey())
 
-    zipPath, err := info.Download()
+	zipPath, err := info.Download()
 	if err != nil {
 		fmt.Println("下载失败")
 		return

@@ -18,22 +18,22 @@ func TestTablePrint(t *testing.T) {
 	})
 	strs := table.Sprintf()
 
-    if len(strs) != 3 {
-        t.Log(strs)
-        t.Error("util.Table.Sprintf() 生成的条目数量错误")
-    }
-    if strs[0] != "name    age   " {
-        t.Log(strs[0])
-        t.Error("util.Table.Sprintf() 生成的Lable有误")
-    }
+	if len(strs) != 3 {
+		t.Log(strs)
+		t.Error("util.Table.Sprintf() 生成的条目数量错误")
+	}
+	if strs[0] != "name    age   " {
+		t.Log(strs[0])
+		t.Error("util.Table.Sprintf() 生成的Lable有误")
+	}
 
-    if strs[1] != "John    30    " {
-        t.Log(strs[0])
-        t.Error("util.Table.Sprintf() 生成的Lable有误")
-    }
+	if strs[1] != "John    30    " {
+		t.Log(strs[0])
+		t.Error("util.Table.Sprintf() 生成的Lable有误")
+	}
 
-    if strs[2] != "Janeh   25    " {
-        t.Log(strs[0])
-        t.Error("util.Table.Sprintf() 生成的Lable有误")
-    }
+	if strs[2] != "Janeh   25    " {
+		t.Log(strs[0])
+		t.Error("util.Table.Sprintf() 生成的Lable有误")
+	}
 }
