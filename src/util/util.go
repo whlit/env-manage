@@ -2,13 +2,13 @@ package util
 
 import (
 	"archive/zip"
-	"fmt"
 	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/whlit/env-manage/logger"
 	"gopkg.in/yaml.v3"
 )
 
@@ -18,8 +18,7 @@ import (
 func GetRootDir() string {
 	exePath, err := os.Executable()
 	if err != nil {
-		fmt.Println("获取根目录失败")
-		os.Exit(1)
+        logger.Error("获取根目录失败", err)
 	}
 	// 软件目录为 bin 根目录应该为上级目录
 	return filepath.Dir(filepath.Dir(exePath))
@@ -29,8 +28,7 @@ func GetRootDir() string {
 func GetExeDir() string {
 	exePath, err := os.Executable()
 	if err != nil {
-		fmt.Println("获取可执行文件目录失败")
-		os.Exit(1)
+        logger.Error("获取可执行文件目录失败", err)
 	}
 	return filepath.Dir(exePath)
 }
@@ -39,8 +37,7 @@ func GetExeDir() string {
 func GetExeName() string {
 	exePath, err := os.Executable()
 	if err != nil {
-		fmt.Println("获取可执行文件目录失败")
-		os.Exit(1)
+        logger.Error("获取可执行文件目录失败", err)
 	}
 	name := filepath.Base(exePath)
 	return strings.TrimSuffix(name, filepath.Ext(name))
@@ -68,7 +65,7 @@ func GetConfigFilePath() string {
 func SaveConfig(config interface{}) {
 	data, err := yaml.Marshal(config)
 	if err != nil {
-		fmt.Println("保存配置文件失败")
+        logger.Warn("保存配置文件失败: ", err)
 	}
 	os.WriteFile(GetConfigFilePath(), data, 0644)
 }
@@ -103,7 +100,7 @@ func Unzip(zipPath, dir string) error {
 
 		// Check for ZipSlip (Directory traversal)
 		if !strings.HasPrefix(path, filepath.Clean(dir)+string(os.PathSeparator)) {
-			return fmt.Errorf("illegal file path: %s", path)
+            logger.Error("illegal file path: %s", path)
 		}
 
 		if f.FileInfo().IsDir() {

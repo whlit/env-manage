@@ -3,14 +3,15 @@ package version
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 
 	"github.com/charmbracelet/huh"
+	"github.com/whlit/env-manage/logger"
 	"github.com/whlit/env-manage/util"
 )
 
@@ -36,8 +37,8 @@ type OracleJdk struct {
 func (jdk OracleJdk) getCheckCode() string {
 	code, err := get(jdk.EnvVersion.Url + ".sha256")
 	if err != nil {
-		fmt.Println(err)
-		return ""
+		logger.Error("获取OracleJDK校验码失败")
+		os.Exit(1)
 	}
 	return string(code)
 }
@@ -160,7 +161,6 @@ func getAdoptiumVersions() []VersionDownload {
 	json.Unmarshal(value, &adoptiumAvailable)
 
 	// 构建版本列表
-	fmt.Println(adoptiumAvailable)
 	for _, v := range adoptiumAvailable.Releases {
 		var aj = AdoptiumJdk{
 			EnvVersion: EnvVersion{

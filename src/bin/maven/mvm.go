@@ -1,9 +1,10 @@
 package main
 
+
 import (
 	"os"
 
-	"github.com/whlit/env-manage/java"
+	"github.com/whlit/env-manage/maven"
 )
 
 
@@ -14,22 +15,20 @@ func main() {
 		action = args[1]
 	}
 
-    java.InitConfig()
-
 	switch action {
 	case "list":
-		java.List()
+		maven.List()
 	case "add":
-		java.Add(args[2], args[3])
+		maven.Add(args[2], args[3])
 	case "rm":
-		java.Remove(args[2])
+		maven.Remove(args[2])
 	case "use":
-		java.Use()
+		maven.Use()
 	case "home":
-		java.Home(args[2])
+		maven.Home(args[2])
 	case "install":
-		java.Install()
+		maven.Install()
 	default:
-		java.Help()
+		maven.Help()
 	}
 }

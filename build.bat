@@ -10,6 +10,17 @@ mkdir dist\unpack\bin
 
 cd .\src
 
+
+echo ----------------------------
+echo Building vm.exe
+echo ----------------------------
+
+if exist .\vm.exe (
+  del .\vm.exe
+)
+go build -o vm.exe main.go
+move .\vm.exe %ROOT_DIR%\dist\unpack\bin
+
 echo ----------------------------
 echo Building jvm.exe
 echo ----------------------------
@@ -17,9 +28,19 @@ echo ----------------------------
 if exist .\jvm.exe (
   del .\jvm.exe
 )
-go build .\bin\java\jvm.go
-move .\jvm.exe %ROOT_DIR%\dist\unpack\bin
+go build -o jvm.exe .\bin\java\jvm.go
 
+
+echo ----------------------------
+echo Building mvm.exe
+echo ----------------------------
+
+if exist .\mvm.exe (
+  del .\mvm.exe
+)
+go build -o mvm.exe .\bin\maven\mvm.go
+
+move .\*.exe %ROOT_DIR%\dist\unpack\bin
 
 echo ----------------------------
 echo Building install.exe
@@ -28,8 +49,7 @@ echo ----------------------------
 if exist .\install.exe (
     del .\install.exe
 )
-go build .\bin\install\install.go
-move .\install.exe %ROOT_DIR%\dist\unpack
+go build -o install.exe .\bin\install\install.go
 
 
 echo ----------------------------
@@ -39,8 +59,9 @@ echo ----------------------------
 if exist .\uninstall.exe (
     del .\uninstall.exe
 )
-go build .\bin\uninstall\uninstall.go
-move .\uninstall.exe %ROOT_DIR%\dist\unpack
+go build -o uninstall.exe .\bin\uninstall\uninstall.go
+
+move .\*.exe %ROOT_DIR%\dist\unpack
 
 cd ..\
 

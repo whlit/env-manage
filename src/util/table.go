@@ -13,6 +13,14 @@ type Table struct {
 	lens     map[string]int
 }
 
+func NewTable(columns []string) *Table {
+	return &Table{
+		Columns:  columns,
+		data:     make([]map[string]string, 0),
+		lens:     make(map[string]int),
+	}
+}
+
 func (t *Table) Printf() {
 	strs := t.Sprintf()
 	for _, str := range strs {
@@ -20,7 +28,7 @@ func (t *Table) Printf() {
 	}
 }
 
-func (t *Table) Add(rows ...map[string]string) {
+func (t *Table) Add(rows ...map[string]string) *Table{
 	if t.lens == nil {
 		t.lens = make(map[string]int)
 	}
@@ -30,6 +38,7 @@ func (t *Table) Add(rows ...map[string]string) {
 		}
 	}
 	t.data = append(t.data, rows...)
+    return t
 }
 
 func (t *Table) Sprintf() []string {

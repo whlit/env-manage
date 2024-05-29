@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/whlit/env-manage/logger"
 	"github.com/whlit/env-manage/util"
 )
 
@@ -79,8 +80,7 @@ func (v *EnvVersion) Download(filePath string) bool {
 	if util.FileExists(filePath) {
 		ok, err := v.Check(filePath)
 		if err != nil {
-			fmt.Println("文件校验失败", err)
-			os.Exit(1)
+			logger.Error("校验文件失败：", err)
 		}
 		if ok {
 			fmt.Println("版本未更新，不需要重新下载。")
@@ -122,8 +122,7 @@ func (v *EnvVersion) Download(filePath string) bool {
 	// 下载完成 校验文件
 	ok, err := v.Check(filePath)
 	if err != nil {
-		fmt.Println("文件校验失败", err)
-		os.Exit(1)
+        logger.Error("校验文件失败：", err)
 	}
 	return ok
 }
