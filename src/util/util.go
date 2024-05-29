@@ -73,7 +73,7 @@ func SaveConfig(config interface{}){
 	os.WriteFile(GetConfigFilePath(), data, 0644)
 }
 
-
+// 解压缩
 func Unzip(zipPath, dir string) error {
 	r, err := zip.OpenReader(zipPath)
 	if err != nil {
@@ -136,4 +136,9 @@ func Unzip(zipPath, dir string) error {
 	}
 
 	return nil
+}
+
+func FileExists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
 }

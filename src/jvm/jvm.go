@@ -1,13 +1,9 @@
 package main
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
-	"errors"
 	"fmt"
 	"io"
 	"io/fs"
-	"net/http"
 	"os"
 	"path"
 	"path/filepath"
@@ -20,6 +16,7 @@ import (
 	"github.com/charmbracelet/huh"
 	"github.com/whlit/env-manage/cmd"
 	"github.com/whlit/env-manage/util"
+	"github.com/whlit/env-manage/version"
 )
 
 type Config struct {
@@ -33,8 +30,6 @@ var config = &Config{
 	Jdks:  make(map[string]string),
 	Root:  "",
 }
-
-var client = &http.Client{}
 
 func main() {
 	args := os.Args
@@ -85,11 +80,11 @@ func list() {
 
 // 添加 JDK
 func add(version string, jpath string) {
-	if !fileExists(jpath) {
+	if !util.FileExists(jpath) {
 		fmt.Println("路径不存在")
 		return
 	}
-	if !fileExists(path.Join(jpath, "bin/java.exe")) {
+	if !util.FileExists(path.Join(jpath, "bin/java.exe")) {
 		fmt.Println("路径不是 JDK 路径", jpath)
 	}
 	config.Jdks[version] = jpath
@@ -169,29 +164,28 @@ func home(jhomePath string) {
 }
 
 func install() {
-	var info DownloadInfo
-	downloads := getDownloads()
-	var options []huh.Option[DownloadInfo] = make([]huh.Option[DownloadInfo], len(downloads))
+	var info version.VersionDownload
+	downloads := version.GetJdkVersions()
+	var options []huh.Option[version.VersionDownload] = make([]huh.Option[version.VersionDownload], len(downloads))
 	for i, v := range downloads {
-		options[i] = huh.NewOption(strings.Join([]string{v.Source, v.Version}, "_"), v)
+		options[i] = huh.NewOption(v.GetVersionKey(), v)
 	}
-	huh.NewSelect[DownloadInfo]().Options(options...).Value(&info).Run()
-	fmt.Println("开始安装JDK", info.Version)
+	huh.NewSelect[version.VersionDownload]().Options(options...).Value(&info).Run()
+	fmt.Println("开始安装JDK", info.GetVersionKey())
 
-	if !download(info) {
+    zipPath, err := info.Download()
+	if err != nil {
 		fmt.Println("下载失败")
 		return
 	}
 
 	// 下载完成 开始解压
 	fmt.Println("正在解压...")
-	zipfile := getDownloadFilePath(info)
-	fileName := filepath.Base(zipfile)
-	dir := filepath.Join(util.GetRootDir(), "versions", "jdk", strings.TrimSuffix(fileName, filepath.Ext(fileName)))
-	if fileExists(dir) {
+	dir := filepath.Join(util.GetRootDir(), "versions", "jdk", info.GetVersionKey())
+	if util.FileExists(dir) {
 		os.RemoveAll(dir)
 	}
-	err := util.Unzip(zipfile, dir)
+	err = util.Unzip(zipPath, dir)
 	if err != nil {
 		fmt.Println("解压失败", err)
 		return
@@ -206,7 +200,7 @@ func install() {
 	if len(dirs) == 1 {
 		dir = filepath.Join(dir, dirs[0].Name())
 	}
-	add(strings.Join([]string{info.Source, info.Version}, "_"), dir)
+	add(info.GetVersionKey(), dir)
 
 	fmt.Println("安装成功")
 }
@@ -230,7 +224,7 @@ func loadConfig() {
 	root := util.GetRootDir()
 	var configFile = util.GetConfigFilePath()
 	// 读取配置文件
-	if fileExists(configFile) {
+	if util.FileExists(configFile) {
 		file, err := os.ReadFile(configFile)
 		if err != nil {
 			fmt.Println("读取配置文件失败")
@@ -254,7 +248,7 @@ func loadConfig() {
 		os.Create(configFile)
 		config.Root = root
 		config.Jhome = path.Join(root, "runtime", "jdk")
-        setJavaHome(config.Jhome)
+		setJavaHome(config.Jhome)
 		util.MkBaseDir(config.Jhome)
 		util.SaveConfig(config)
 	}
@@ -266,151 +260,4 @@ func help() {
 	fmt.Println("jvm list                        List all installed JDKs")
 	fmt.Println("jvm use                         Select And Use a JDK")
 	fmt.Println("jvm home <path>                 Set the path of JAVA_HOME")
-}
-
-func fileExists(path string) bool {
-	_, err := os.Stat(path)
-	return err == nil
-}
-
-type DownloadInfo struct {
-	Version      string
-	Url          string
-	CheckCodeUrl string
-	CheckType    string
-	Source       string
-}
-
-func getDownloads() []DownloadInfo {
-	return []DownloadInfo{
-		{
-			Version:      "jdk22",
-			Url:          "https://download.oracle.com/java/22/latest/jdk-22_windows-x64_bin.zip",
-			CheckType:    "sha256",
-			CheckCodeUrl: "https://download.oracle.com/java/22/latest/jdk-22_windows-x64_bin.zip.sha256",
-			Source:       "oracle",
-		},
-		{
-			Version:      "jdk21",
-			Url:          "https://download.oracle.com/java/21/latest/jdk-21_windows-x64_bin.zip",
-			CheckType:    "sha256",
-			CheckCodeUrl: "https://download.oracle.com/java/21/latest/jdk-21_windows-x64_bin.zip.sha256",
-			Source:       "oracle",
-		},
-		{
-			Version:      "jdk17",
-			Url:          "https://download.oracle.com/java/17/latest/jdk-17_windows-x64_bin.zip",
-			CheckType:    "sha256",
-			CheckCodeUrl: "https://download.oracle.com/java/17/latest/jdk-17_windows-x64_bin.zip.sha256",
-			Source:       "oracle",
-		},
-	}
-}
-
-func getDownloadFilePath(info DownloadInfo) string {
-	fileName := filepath.Base(info.Url)
-	// todo 从root 目录下创建一个临时目录
-	// filePath := filepath.Join(util.GetRootDir(), "temp", fileName)
-	filePath := filepath.Join("D:\\", "temp", fileName)
-	return filePath
-}
-
-// 下载文件
-// 下载文件到临时目录
-func download(info DownloadInfo) bool {
-	filePath := getDownloadFilePath(info)
-	// 文件已经存在，说明下载过了，需要校验一下和最新的是否一致，不一致则删除，重新下载
-	if fileExists(filePath) {
-		ok, err := checkFile(info)
-		if err != nil {
-			fmt.Println("文件校验失败", err)
-			os.Exit(1)
-		}
-		if ok {
-			fmt.Println("版本未更新，不需要重新下载。")
-			return true
-		}
-		os.Remove(filePath)
-	} else {
-		util.MkBaseDir(filePath)
-	}
-	// 创建文件
-	out, err := os.Create(filePath)
-	if err != nil {
-		fmt.Println(err)
-		return false
-	}
-	defer out.Close()
-
-	// 下载文件
-	req, err := http.NewRequest("GET", info.Url, nil)
-	if err != nil {
-		fmt.Println(err)
-		return false
-	}
-	req.Header.Set("User-Agent", "Env Manage")
-	response, err := client.Do(req)
-	if err != nil {
-		fmt.Println("Error while downloading", "-", err)
-		return false
-	}
-	defer response.Body.Close()
-	fmt.Println("Downloading... ", info.Url)
-	_, err = io.Copy(out, response.Body)
-	if err != nil {
-		fmt.Println(err)
-		return false
-	}
-	fmt.Println("Download Completed")
-	fmt.Println("校验文件...")
-	// 下载完成 校验文件
-	ok, err := checkFile(info)
-	if err != nil {
-		fmt.Println("文件校验失败", err)
-		os.Exit(1)
-	}
-	return ok
-}
-
-// 校验文件
-// 从远程获取校验码对下载的文件进行校验
-func checkFile(info DownloadInfo) (bool, error) {
-	filePath := getDownloadFilePath(info)
-	if !fileExists(filePath) {
-		return false, errors.New("文件不存在")
-	}
-	file, err := os.Open(filePath)
-	if err != nil {
-		return false, err
-	}
-	defer file.Close()
-
-	// 获取校验码
-	req, err := http.NewRequest("GET", info.CheckCodeUrl, nil)
-	if err != nil {
-		return false, err
-	}
-	req.Header.Set("User-Agent", "Env Manage")
-	response, err := client.Do(req)
-	if err != nil {
-		return false, err
-	}
-	code, err := io.ReadAll(response.Body)
-	if err != nil {
-		return false, err
-	}
-
-	// 计算校验码并进行校验
-	switch info.CheckType {
-	case "sha256":
-		hash := sha256.New()
-		_, err = io.Copy(hash, file)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-		hashInBytes := hash.Sum(nil)
-		return hex.EncodeToString(hashInBytes) == string(code), nil
-	}
-	return true, nil
 }
