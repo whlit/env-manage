@@ -25,8 +25,6 @@ func GetJdkVersions() []VersionDownload {
 
 func getDownloadFilePath(v EnvVersion) string {
 	return filepath.Join(filepath.Join(util.GetRootDir(), "download", "jdk"), v.GetVersionKey(), filepath.Base(v.Url))
-	// 测试 临时使用
-	// return filepath.Join("D:\\temp", v.GetVersionKey(), filepath.Base(v.Url))
 }
 
 // OracleJdk
