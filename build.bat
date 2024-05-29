@@ -17,7 +17,7 @@ echo ----------------------------
 if exist .\jvm.exe (
   del .\jvm.exe
 )
-go build .\jvm\jvm.go
+go build .\bin\java\jvm.go
 move .\jvm.exe %ROOT_DIR%\dist\unpack\bin
 
 
@@ -28,7 +28,7 @@ echo ----------------------------
 if exist .\install.exe (
     del .\install.exe
 )
-go build .\tools\install\install.go
+go build .\bin\install\install.go
 move .\install.exe %ROOT_DIR%\dist\unpack
 
 
@@ -39,7 +39,7 @@ echo ----------------------------
 if exist .\uninstall.exe (
     del .\uninstall.exe
 )
-go build .\tools\uninstall\uninstall.go
+go build .\bin\uninstall\uninstall.go
 move .\uninstall.exe %ROOT_DIR%\dist\unpack
 
 cd ..\
