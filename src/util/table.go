@@ -13,14 +13,16 @@ type Table struct {
 	lens     map[string]int
 }
 
+// 新建表格
 func NewTable(columns []string) *Table {
 	return &Table{
-		Columns:  columns,
-		data:     make([]map[string]string, 0),
-		lens:     make(map[string]int),
+		Columns: columns,
+		data:    make([]map[string]string, 0),
+		lens:    make(map[string]int),
 	}
 }
 
+// 打印
 func (t *Table) Printf() {
 	strs := t.Sprintf()
 	for _, str := range strs {
@@ -28,7 +30,8 @@ func (t *Table) Printf() {
 	}
 }
 
-func (t *Table) Add(rows ...map[string]string) *Table{
+// 新增数据
+func (t *Table) Add(rows ...map[string]string) *Table {
 	if t.lens == nil {
 		t.lens = make(map[string]int)
 	}
@@ -38,9 +41,10 @@ func (t *Table) Add(rows ...map[string]string) *Table{
 		}
 	}
 	t.data = append(t.data, rows...)
-    return t
+	return t
 }
 
+// 获取格式化数据
 func (t *Table) Sprintf() []string {
 	var res []string = make([]string, len(t.data)+1)
 

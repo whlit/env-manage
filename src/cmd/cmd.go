@@ -52,6 +52,9 @@ func SetEnvironmentValue(name string, value string) error {
 	}
 	defer key.Close()
 	oldValue, _, _ := key.GetStringValue(name)
+	if oldValue == value {
+		return nil
+	}
 	logger.Info("写入环境变量:%s, \n    旧值:'%s',  \n    新值:'%s'", name, oldValue, value)
 	_, err = run("reg", nil, "add", "HKEY_CURRENT_USER\\Environment", "/v", name, "/t", "REG_SZ", "/d", value, "/f")
 	return err

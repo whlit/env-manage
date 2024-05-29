@@ -6,7 +6,6 @@ import (
 	"github.com/whlit/env-manage/java"
 )
 
-
 func main() {
 	args := os.Args
 	action := ""
@@ -14,7 +13,7 @@ func main() {
 		action = args[1]
 	}
 
-    java.InitConfig()
+	java.InitConfig()
 
 	switch action {
 	case "list":

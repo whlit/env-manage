@@ -9,35 +9,45 @@ import (
 	"strings"
 
 	"github.com/whlit/env-manage/logger"
-	"gopkg.in/yaml.v3"
 )
+
+var root string
+var exeDir string
 
 // 获取根目录 获取失败则直接退出程序
 // 本方法以当前可执行文件所在的目录为bin目录为前提
 // 注意使用
 func GetRootDir() string {
+	if root != "" {
+		return root
+	}
 	exePath, err := os.Executable()
 	if err != nil {
-        logger.Error("获取根目录失败", err)
+		logger.Error("获取根目录失败", err)
 	}
 	// 软件目录为 bin 根目录应该为上级目录
-	return filepath.Dir(filepath.Dir(exePath))
+	root = filepath.Dir(filepath.Dir(exePath))
+	return root
 }
 
 // 获取当前可执行文件所在的目录
 func GetExeDir() string {
+	if exeDir != "" {
+		return exeDir
+	}
 	exePath, err := os.Executable()
 	if err != nil {
-        logger.Error("获取可执行文件目录失败", err)
+		logger.Error("获取可执行文件目录失败", err)
 	}
-	return filepath.Dir(exePath)
+	exeDir = filepath.Dir(exePath)
+	return exeDir
 }
 
 // 获取当前可执行文件名称 不带后缀
 func GetExeName() string {
 	exePath, err := os.Executable()
 	if err != nil {
-        logger.Error("获取可执行文件目录失败", err)
+		logger.Error("获取可执行文件目录失败", err)
 	}
 	name := filepath.Base(exePath)
 	return strings.TrimSuffix(name, filepath.Ext(name))
@@ -52,22 +62,6 @@ func MkBaseDir(path string) {
 			os.MkdirAll(filepath.Dir(path), fs.ModeDir)
 		}
 	}
-}
-
-// 获取配置文件路径
-func GetConfigFilePath() string {
-	path := filepath.Join(GetRootDir(), "config", strings.Join([]string{GetExeName(), ".yml"}, ""))
-	MkBaseDir(path)
-	return path
-}
-
-// 保存配置
-func SaveConfig(config interface{}) {
-	data, err := yaml.Marshal(config)
-	if err != nil {
-        logger.Warn("保存配置文件失败: ", err)
-	}
-	os.WriteFile(GetConfigFilePath(), data, 0644)
 }
 
 // 解压缩
@@ -100,7 +94,7 @@ func Unzip(zipPath, dir string) error {
 
 		// Check for ZipSlip (Directory traversal)
 		if !strings.HasPrefix(path, filepath.Clean(dir)+string(os.PathSeparator)) {
-            logger.Error("illegal file path: %s", path)
+			logger.Error("illegal file path: ", path)
 		}
 
 		if f.FileInfo().IsDir() {
@@ -135,6 +129,7 @@ func Unzip(zipPath, dir string) error {
 	return nil
 }
 
+// 文件是否存在
 func FileExists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil

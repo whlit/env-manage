@@ -47,10 +47,12 @@ type EnvVersion struct {
 	FilePath string
 }
 
+// 获取版本标识
 func (v *EnvVersion) GetVersionKey() string {
 	return v.Source + "-" + v.Version
 }
 
+// 校验下载的文件
 func (v *EnvVersion) Check(filePath string) (bool, error) {
 	if !util.FileExists(filePath) {
 		return false, errors.New("文件不存在")
@@ -75,6 +77,7 @@ func (v *EnvVersion) Check(filePath string) (bool, error) {
 	return true, nil
 }
 
+// 下载文件到指定位置
 func (v *EnvVersion) Download(filePath string) bool {
 	// 文件已经存在，说明下载过了，需要校验一下和最新的是否一致，不一致则删除，重新下载
 	if util.FileExists(filePath) {
@@ -122,7 +125,7 @@ func (v *EnvVersion) Download(filePath string) bool {
 	// 下载完成 校验文件
 	ok, err := v.Check(filePath)
 	if err != nil {
-        logger.Error("校验文件失败：", err)
+		logger.Error("校验文件失败：", err)
 	}
 	return ok
 }

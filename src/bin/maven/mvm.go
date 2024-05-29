@@ -1,12 +1,10 @@
 package main
 
-
 import (
 	"os"
 
 	"github.com/whlit/env-manage/maven"
 )
-
 
 func main() {
 	args := os.Args

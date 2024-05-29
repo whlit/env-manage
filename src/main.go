@@ -28,27 +28,27 @@ func main() {
 }
 
 func list(args []string) {
-    soft := getSoft(args)
-    switch soft {
-    case "jdk":
-        java.List()
-    case "maven":
-        maven.List()
-    default:
-        fmt.Println("not support the value: ", soft)
-    }
+	soft := getSoft(args)
+	switch soft {
+	case "jdk":
+		java.List()
+	case "maven":
+		maven.List()
+	default:
+		fmt.Println("not support the value: ", soft)
+	}
 }
 
 func install(args []string) {
-    soft := getSoft(args)
-    switch soft {
-    case "jdk":
-        java.Install()
-    case "maven":
-        maven.Install()
-    default:
-        fmt.Println("not support the value: ", soft)
-    }
+	soft := getSoft(args)
+	switch soft {
+	case "jdk":
+		java.Install()
+	case "maven":
+		maven.Install()
+	default:
+		fmt.Println("not support the value: ", soft)
+	}
 }
 
 func help() {
@@ -68,18 +68,18 @@ func help() {
 
 }
 
-func getSoft(args []string) string{
-    var soft string
-    if len(args) > 0 {
-        soft = args[0]
-    }else{
-        huh.NewSelect[string]().Height(5).Options(huh.NewOptions("jdk", "maven")...).Value(&soft).Run()
-    }
+func getSoft(args []string) string {
+	var soft string
+	if len(args) > 0 {
+		soft = args[0]
+	} else {
+		huh.NewSelect[string]().Height(5).Options(huh.NewOptions("jdk", "maven")...).Value(&soft).Run()
+	}
 
-    switch soft {
-    case "jdk":
-        java.InitConfig()
-    }
+	switch soft {
+	case "jdk":
+		java.InitConfig()
+	}
 
-    return soft
+	return soft
 }
