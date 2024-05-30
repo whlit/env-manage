@@ -13,6 +13,8 @@ func main() {
 		action = args[1]
 	}
 
+    maven.InitConfig()
+
 	switch action {
 	case "list":
 		maven.List()
@@ -27,6 +29,10 @@ func main() {
 	case "install":
 		maven.Install()
 	default:
-		maven.Help()
+		help()
 	}
+}
+
+func help() {
+
 }

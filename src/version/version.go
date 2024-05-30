@@ -2,13 +2,17 @@ package version
 
 import (
 	"crypto/sha256"
+	"crypto/sha512"
 	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
+	"strings"
 
+	"github.com/charmbracelet/huh"
 	"github.com/whlit/env-manage/logger"
 	"github.com/whlit/env-manage/util"
 )
@@ -39,12 +43,6 @@ type EnvVersion struct {
 
 	// 是否最新版本
 	Latest bool
-
-	// 文件名称
-	FileName string
-
-	// 下载文件路径
-	FilePath string
 }
 
 // 获取版本标识
@@ -68,6 +66,14 @@ func (v *EnvVersion) Check(filePath string) (bool, error) {
 	case "sha256":
 		hash := sha256.New()
 		_, err = io.Copy(hash, file)
+		if err != nil {
+			return false, err
+		}
+		hashInBytes := hash.Sum(nil)
+		return hex.EncodeToString(hashInBytes) == v.CheckCode, nil
+    case "sha512":
+        hash := sha512.New()
+        _, err = io.Copy(hash, file)
 		if err != nil {
 			return false, err
 		}
@@ -128,4 +134,46 @@ func (v *EnvVersion) Download(filePath string) bool {
 		logger.Error("校验文件失败：", err)
 	}
 	return ok
+}
+
+func Install(versions []VersionDownload, dir string) (VersionDownload, error){
+    if versions == nil || len(versions) < 1 {
+        logger.Warn("未找到任何版本信息")
+        return nil, errors.New("未找到任何版本信息")
+    }
+    var v VersionDownload
+	var options []huh.Option[VersionDownload] = make([]huh.Option[VersionDownload], len(versions))
+	for i, v := range versions {
+		options[i] = huh.NewOption(v.GetVersionKey(), v)
+	}
+	huh.NewSelect[VersionDownload]().Options(options...).Value(&v).Run()
+	var confirm bool
+	huh.NewConfirm().Title(strings.Join([]string{"确认安装 ", v.GetVersionKey(), " ?"}, "")).Value(&confirm).Run()
+	if !confirm {
+		logger.Info("取消安装")
+		os.Exit(1)
+	}
+	logger.Info("开始安装 ", v.GetVersionKey())
+
+	zipPath, err := v.Download()
+	if err != nil {
+		logger.Warn("下载失败")
+		return nil, err
+	}
+
+	// 下载完成 开始解压
+	logger.Info("正在解压...")
+    installPath := filepath.Join(dir, v.GetVersionKey())
+	if util.FileExists(installPath) {
+		os.RemoveAll(installPath)
+	}
+	err = util.Unzip(zipPath, installPath)
+	if err != nil {
+		logger.Warn("解压失败", err)
+		return nil, err
+	}
+	// 解压完成 开始配置
+	logger.Info("解压完成")
+
+    return v, nil
 }

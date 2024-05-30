@@ -25,18 +25,17 @@ func GetJdkVersions() []VersionDownload {
 	return res
 }
 
-// 获取下载文件路径
-func getDownloadFilePath(v EnvVersion) string {
-	return filepath.Join(filepath.Join(util.GetRootDir(), "download", "jdk"), v.GetVersionKey(), filepath.Base(v.Url))
-}
-
 // OracleJdk
 type OracleJdk struct {
 	EnvVersion
 }
 
+func (jdk *OracleJdk) getDownloadFilePath() string {
+    return filepath.Join(util.GetDownloadDir(), "jdk", jdk.GetVersionKey(), filepath.Base(jdk.Url))
+}
+
 // 获取OracleJDK的校验码
-func (jdk OracleJdk) getCheckCode() string {
+func (jdk *OracleJdk) getCheckCode() string {
 	code, err := get(jdk.EnvVersion.Url + ".sha256")
 	if err != nil {
 		logger.Error("获取OracleJDK校验码失败")
@@ -47,11 +46,9 @@ func (jdk OracleJdk) getCheckCode() string {
 
 // 下载OracleJDK
 func (jdk *OracleJdk) Download() (string, error) {
-	filePath := getDownloadFilePath(jdk.EnvVersion)
+	filePath := jdk.getDownloadFilePath()
 	// 获取校验码
 	jdk.EnvVersion.CheckCode = jdk.getCheckCode()
-	jdk.EnvVersion.FilePath = filePath
-	jdk.EnvVersion.FileName = filepath.Base(jdk.EnvVersion.FilePath)
 	if jdk.EnvVersion.Download(filePath) {
 		return filePath, nil
 	}
@@ -99,6 +96,10 @@ type AdoptiumJdk struct {
 	v int
 }
 
+func (jdk *AdoptiumJdk) getDownloadFilePath() string {
+    return filepath.Join(util.GetDownloadDir(), "jdk", jdk.GetVersionKey(), filepath.Base(jdk.Url))
+}
+
 // 下载AdoptiumJdk
 func (jdk *AdoptiumJdk) Download() (string, error) {
 	value, err := get(strings.Join([]string{"https://api.adoptium.net/v3/assets/latest/", strconv.Itoa(jdk.v), "/hotspot?architecture=x64&image_type=jdk&os=windows&vendor=eclipse"}, ""))
@@ -122,9 +123,7 @@ func (jdk *AdoptiumJdk) Download() (string, error) {
 	}
 
 	jdk.EnvVersion.Url = asset.Binary.Package.Url
-	filePath := getDownloadFilePath(jdk.EnvVersion)
-	jdk.EnvVersion.FilePath = filePath
-	jdk.EnvVersion.FileName = filepath.Base(jdk.EnvVersion.FilePath)
+	filePath := jdk.getDownloadFilePath()
 	jdk.EnvVersion.CheckCode = asset.Binary.Package.Checksum
 
 	if jdk.EnvVersion.Download(filePath) {

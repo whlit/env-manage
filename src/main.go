@@ -52,7 +52,6 @@ func install(args []string) {
 }
 
 func help() {
-
 	util.NewTable([]string{"Command", "Example", "Description"}).Add(
 		map[string]string{
 			"Command":     "list [jdk|maven]",
@@ -65,7 +64,6 @@ func help() {
 			"Example":     "vm install jdk",
 		},
 	).Printf()
-
 }
 
 func getSoft(args []string) string {
@@ -79,6 +77,8 @@ func getSoft(args []string) string {
 	switch soft {
 	case "jdk":
 		java.InitConfig()
+    case "maven":
+        maven.InitConfig()
 	}
 
 	return soft

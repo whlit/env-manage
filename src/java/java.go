@@ -99,6 +99,7 @@ func Use() {
 	if home != nil {
 		cmd.ElevatedRun("rmdir", filepath.Clean(config.Data.Jhome))
 	}
+    util.MkBaseDir(filepath.Clean(config.Data.Jhome))
 	_, err := cmd.ElevatedRun("mklink", "/D", filepath.Clean(config.Data.Jhome), filepath.Clean(config.Data.Jdks[name]))
 	if err != nil {
 		errr, _ := simplifiedchinese.GB18030.NewDecoder().String(err.Error())
@@ -120,7 +121,7 @@ func Home(jhomePath string) {
 			return
 		}
 		os.MkdirAll(filepath.Dir(jhomePath), fs.ModeDir)
-		setJavaHome(jhomePath)
+		saveJavaHome(jhomePath)
 		return
 	}
 	if !file.IsDir() {
@@ -142,44 +143,19 @@ func Home(jhomePath string) {
 	if err != nil {
 		fmt.Println("删除目录失败", err)
 	}
-	setJavaHome(jhomePath)
+	saveJavaHome(jhomePath)
 }
 
 func Install() {
-	var info version.VersionDownload
-	downloads := version.GetJdkVersions()
-	var options []huh.Option[version.VersionDownload] = make([]huh.Option[version.VersionDownload], len(downloads))
-	for i, v := range downloads {
-		options[i] = huh.NewOption(v.GetVersionKey(), v)
-	}
-	huh.NewSelect[version.VersionDownload]().Options(options...).Value(&info).Run()
-	var confirm bool
-	huh.NewConfirm().Title(strings.Join([]string{"确认安装 ", info.GetVersionKey(), " ?"}, "")).Value(&confirm).Run()
-	if !confirm {
-		fmt.Println("取消安装")
-		return
-	}
-	fmt.Println("开始安装JDK", info.GetVersionKey())
-
-	zipPath, err := info.Download()
+	dir := filepath.Join(util.GetRootDir(), "versions", "jdk")
+	jdk, err := version.Install(version.GetJdkVersions(), dir)
 	if err != nil {
-		fmt.Println("下载失败")
-		return
-	}
-
-	// 下载完成 开始解压
-	fmt.Println("正在解压...")
-	dir := filepath.Join(util.GetRootDir(), "versions", "jdk", info.GetVersionKey())
-	if util.FileExists(dir) {
-		os.RemoveAll(dir)
-	}
-	err = util.Unzip(zipPath, dir)
-	if err != nil {
-		fmt.Println("解压失败", err)
+		fmt.Println("安装失败", err)
 		return
 	}
 	// 解压完成 开始配置
-	fmt.Println("解压完成, 正在添加到配置")
+	fmt.Println("正在添加到配置")
+	dir = filepath.Join(dir, jdk.GetVersionKey())
 	dirs, err := os.ReadDir(dir)
 	if err != nil {
 		fmt.Println("读取目录失败", err)
@@ -188,22 +164,13 @@ func Install() {
 	if len(dirs) == 1 {
 		dir = filepath.Join(dir, dirs[0].Name())
 	}
-	Add(info.GetVersionKey(), dir)
-
+	Add(jdk.GetVersionKey(), dir)
 	fmt.Println("安装成功")
 }
 
-func setJavaHome(jhome string) {
+func saveJavaHome(jhome string) {
 	config.Data.Jhome = jhome
 	config.Save()
 	cmd.SetEnvironmentValue("JAVA_HOME", jhome)
 	fmt.Println("设置JAVA_HOME成功,需要重启终端生效")
-}
-
-func Help() {
-	fmt.Println("add <name> <path>           Add a JDK")
-	fmt.Println("rm <name>                   Remove a JDK")
-	fmt.Println("list                        List all installed JDKs")
-	fmt.Println("use                         Select And Use a JDK")
-	fmt.Println("home <path>                 Set the path of JAVA_HOME")
 }

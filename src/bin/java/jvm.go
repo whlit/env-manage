@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/whlit/env-manage/java"
@@ -29,6 +30,14 @@ func main() {
 	case "install":
 		java.Install()
 	default:
-		java.Help()
+		help()
 	}
+}
+
+func help() {
+	fmt.Println("add <name> <path>           Add a JDK")
+	fmt.Println("rm <name>                   Remove a JDK")
+	fmt.Println("list                        List all installed JDKs")
+	fmt.Println("use                         Select And Use a JDK")
+	fmt.Println("home <path>                 Set the path of JAVA_HOME")
 }

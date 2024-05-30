@@ -26,12 +26,16 @@ func init() {
 		fmt.Println("打开日志文件失败:", err)
 		os.Exit(1)
 	}
-	infoLogger = log.New(io.MultiWriter(file, os.Stderr), "Info: ", log.Ldate|log.Ltime|log.Lshortfile)
-	infoLogger = log.New(io.MultiWriter(file, os.Stderr), "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
+	infoLogger = log.New(io.MultiWriter(file, os.Stderr), "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
+	errorLogger = log.New(io.MultiWriter(file, os.Stderr), "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
 }
 
-func Info(format string, v ...any) {
+func Infof(format string, v ...any) {
 	infoLogger.Printf(format, v...)
+}
+
+func Info(v ...any) {
+	infoLogger.Println(v...)
 }
 
 func Error(v ...any) {

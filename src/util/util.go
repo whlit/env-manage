@@ -43,14 +43,9 @@ func GetExeDir() string {
 	return exeDir
 }
 
-// 获取当前可执行文件名称 不带后缀
-func GetExeName() string {
-	exePath, err := os.Executable()
-	if err != nil {
-		logger.Error("获取可执行文件目录失败", err)
-	}
-	name := filepath.Base(exePath)
-	return strings.TrimSuffix(name, filepath.Ext(name))
+// 获取下载文件夹
+func GetDownloadDir() string {
+    return filepath.Join(GetRootDir(), "download")
 }
 
 // 创建最后一个分隔符之前的目录
