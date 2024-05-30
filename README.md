@@ -25,13 +25,13 @@ JVM (Java Version Manager). Java 版本管理，并不是Java虚拟机的意思�
 设置JAVA_HOME环境变量的值，也就是生成的快捷方式的路径。默认使用`安装目录\runtime\jdk`
 
 ```powershell
-jvm home [path]  # 例如 jvm home D:\soft\jdk
+jvm home <path>  # 例如 jvm home D:\soft\jdk
 ```
 
 ### 添加版本
 
 ```powershell
-jvm add [key] [path]  # 例如 jvm add jdk-11 D:\soft\java\jdk-11.0.2
+jvm add <key> <path>  # 例如 jvm add jdk-11 D:\soft\java\jdk-11.0.2
 ```
 
 ### 切换版本
@@ -43,7 +43,7 @@ jvm use # 交互式选择使用的版本
 ### 删除版本
 
 ```powershell
-jvm rm [key]  # 例如 jvm rm jdk-11
+jvm rm <key>  # 例如 jvm rm jdk-11
 ```
 
 ### 查看版本
@@ -54,8 +54,51 @@ jvm list  # 查看所有添加的版本
 
 ### 在线安装JDK
 
+直接在线安装JDK，支持从Oracle官网下载和Adoptium官网下载
+
 ```powershell
 jvm install # 交互式选择安装的版本
 ```
 
+## MVM
+
+MVM (Maven Version Manager). Maven 版本管理器。
+
+### 设置M2_HOME
+
+设置M2_HOME环境变量,默认使用`安装目录\runtime\jdk`
+
+```powershell
+mvm home <path>  # 例如 mvm home D:\apache-maven
+```
+
+### 添加版本
+
+```powershell
+mvm add <key> <path>  # 例如 mvm add apache-maven-3.9.4 D:\soft\apache-maven-3.9.4
+```
+
+### 切换版本
+
+```powershell
+mvm use # 交互式选择使用的版本
+```
+
+### 删除版本
+
+```powershell
+mvm rm <key>  # 例如 mvm rm apache-maven-3.9.4
+```
+
+### 查看版本
+
+```powershell
+mvm list  # 查看所有添加的版本
+```
+
+### 在线安装Maven
+
+```powershell
+mvm install # 交互式选择安装的版本
+```
 

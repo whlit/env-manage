@@ -1,3 +1,8 @@
+## V0.1.4
+
+- 添加Maven管理
+- 添加直接从Apache下载Maven
+
 ## V0.1.3
 
 - 添加从Adoptium下载JDK
