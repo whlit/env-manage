@@ -7,6 +7,6 @@ import (
 )
 
 func main() {
-	cmd.RemoveFromPath("%VM_HOME%\bin")
+	cmd.RemoveFromPath("%VM_HOME%\\bin")
 	fmt.Println("卸载成功,请重新打开终端使用")
 }

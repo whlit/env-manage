@@ -22,7 +22,7 @@ func main() {
 	case "add":
 		java.Add(args[2], args[3])
 	case "rm":
-		java.Remove(args[2])
+		java.Remove()
 	case "use":
 		java.Use()
 	case "home":

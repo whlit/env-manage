@@ -4,23 +4,16 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/whlit/env-manage/logger"
 	"github.com/whlit/env-manage/util"
 	"golang.org/x/sys/windows/registry"
+	"golang.org/x/text/encoding/simplifiedchinese"
 )
-
-// 提升权限运行
-func ElevatedRun(name string, arg ...string) (bool, error) {
-	ok, err := run("cmd", nil, append([]string{"/C", name}, arg...)...)
-	if err != nil {
-		root := util.GetRootDir()
-		ok, err = run(".\\lib\\elevate.cmd", &root, append([]string{"cmd", "/C", name}, arg...)...)
-	}
-	return ok, err
-}
 
 // 获取注册表项
 func GetEnvironmentValue(name string) (string, error) {
@@ -103,6 +96,21 @@ func RemoveFromPath(value string) {
 	}
 }
 
+func CreateLink(dir string, target string) {
+	dir = filepath.Clean(dir)
+	// 修改快捷方式指向
+	home, _ := os.Lstat(dir)
+	if home != nil {
+		elevatedRun("rmdir", dir)
+	}
+	util.MkBaseDir(dir)
+	_, err := elevatedRun("mklink", "/D", filepath.Clean(dir), target)
+	if err != nil {
+		errr, _ := simplifiedchinese.GB18030.NewDecoder().String(err.Error())
+		logger.Error("创建快捷方式失败", errr)
+	}
+}
+
 // 运行命令
 func run(name string, dir *string, arg ...string) (bool, error) {
 	c := exec.Command(name, arg...)
@@ -117,4 +125,14 @@ func run(name string, dir *string, arg ...string) (bool, error) {
 	}
 
 	return true, nil
+}
+
+// 提升权限运行
+func elevatedRun(name string, arg ...string) (bool, error) {
+	ok, err := run("cmd", nil, append([]string{"/C", name}, arg...)...)
+	if err != nil {
+		root := util.GetRootDir()
+		ok, err = run(".\\lib\\elevate.cmd", &root, append([]string{"cmd", "/C", name}, arg...)...)
+	}
+	return ok, err
 }

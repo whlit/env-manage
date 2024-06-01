@@ -13,7 +13,7 @@ func main() {
 		action = args[1]
 	}
 
-    maven.InitConfig()
+	maven.InitConfig()
 
 	switch action {
 	case "list":
@@ -21,7 +21,7 @@ func main() {
 	case "add":
 		maven.Add(args[2], args[3])
 	case "rm":
-		maven.Remove(args[2])
+		maven.Remove()
 	case "use":
 		maven.Use()
 	case "home":

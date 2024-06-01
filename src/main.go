@@ -28,7 +28,7 @@ func main() {
 }
 
 func list(args []string) {
-	soft := getSoft(args)
+	soft := getManage(args)
 	switch soft {
 	case "jdk":
 		java.List()
@@ -40,7 +40,7 @@ func list(args []string) {
 }
 
 func install(args []string) {
-	soft := getSoft(args)
+	soft := getManage(args)
 	switch soft {
 	case "jdk":
 		java.Install()
@@ -66,7 +66,7 @@ func help() {
 	).Printf()
 }
 
-func getSoft(args []string) string {
+func getManage(args []string) string {
 	var soft string
 	if len(args) > 0 {
 		soft = args[0]
@@ -77,8 +77,8 @@ func getSoft(args []string) string {
 	switch soft {
 	case "jdk":
 		java.InitConfig()
-    case "maven":
-        maven.InitConfig()
+	case "maven":
+		maven.InitConfig()
 	}
 
 	return soft
