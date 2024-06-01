@@ -12,11 +12,6 @@ import (
 	"golang.org/x/sys/windows/registry"
 )
 
-// 设置用户环境变量
-func SetUserEnvVar(name string, value string) {
-	ElevatedRun("setx", name, value)
-}
-
 // 提升权限运行
 func ElevatedRun(name string, arg ...string) (bool, error) {
 	ok, err := run("cmd", nil, append([]string{"/C", name}, arg...)...)

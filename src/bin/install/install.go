@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"path/filepath"
 
 	"github.com/whlit/env-manage/cmd"
 	"github.com/whlit/env-manage/util"
@@ -10,6 +9,7 @@ import (
 
 func main() {
 	root := util.GetExeDir()
-	cmd.AddToPath(filepath.Join(root, "bin"))
+	cmd.SetEnvironmentValue("VM_HOME", root)
+	cmd.AddToPath("%VM_HOME%\bin")
 	fmt.Println("安装成功,请重新打开终端使用")
 }
