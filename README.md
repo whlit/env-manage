@@ -16,9 +16,80 @@
 ./build.cmd
 ```
 
+## VM
+
+VM (Version Manager). 软件版本环境变量管理器
+
+```
+Usage: vm <name> <action> [args]
+Name:                      环境管理的名称
+  jdk                      jdk版本管理
+  maven                    maven版本管理
+  <name>                   用create创建的其他版本管理的名称
+Actions:
+  create                   创建一个版本管理
+  add <version> <path>     添加版本,version: 版本名称(自定义),path: 版本的绝对路径
+  rm                       移除版本
+  list                     查询所有已添加的版本管理
+  use                      使用版本
+  install                  在线安装新版本,只支持jdk/maven的在线安装
+```
+
+默认支持JDK和MAVEN的版本管理，同时提供自定义版本管理
+
+### 自定义版本管理
+
+Usage: `vm <name> create`
+
+例如：添加golang版本管理
+
+- 创建版本管理
+
+```sh
+vm go create
+```
+
+之后会弹出输入要创建的环境变量及要添加到Path的值
+
+```
+输入要添加的环境变量名称:
+(例如:JDK环境变量名称为:JAVA_HOME)
+> GOROOT
+输入要添加到Path的值:
+(例如:JDK添加到Path为:%JAVA_HOME%\bin)
+> %GOROOT%\bin
+```
+
+- 添加版本
+
+```sh
+vm go add v1.21.4 D:\soft\go
+```
+
+- 查询版本信息
+
+```sh
+vm go list
+```
+
+- 使用版本
+
+```sh
+vm use
+````
+
+- 移除版本
+
+```sh
+vm go rm v1.21.4
+```
+
+只是从列表中移除，并不会删除文件
+
+
 ## JVM
 
-JVM (Java Version Manager). Java 版本管理，并不是Java虚拟机的意思。
+JVM (Java Version Manager). Java 版本管理，并不是Java虚拟机的意思。这个命令是上面命令的简化版本。
 
 ### 设置JAVA_HOME
 
