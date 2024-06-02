@@ -20,7 +20,7 @@ type ApacheMaven struct {
 }
 
 func (maven *ApacheMaven) getDownloadFilePath() string {
-    return filepath.Join(util.GetDownloadDir(), "maven", maven.GetVersionKey(), filepath.Base(maven.Url))
+	return filepath.Join(util.GetDownloadDir(), "maven", maven.GetVersionKey(), filepath.Base(maven.Url))
 }
 
 func (maven *ApacheMaven) getCheckCode() string {
@@ -46,7 +46,7 @@ func getApacheMavens() []VersionDownload {
 	versions := []VersionDownload{}
 	value, err := get("https://dlcdn.apache.org/maven/maven-3/")
 	if err != nil {
-		fmt.Println("获取Maven版本信息失败")
+		logger.Warn("获取Maven版本信息失败", err)
 		return versions
 	}
 	re := regexp.MustCompile(`(>[\d\.]+/<)`)
@@ -57,15 +57,14 @@ func getApacheMavens() []VersionDownload {
 		vstr = vstr[1 : len(vstr)-2]
 		versions = append(versions, &ApacheMaven{
 			EnvVersion: EnvVersion{
-				Version: vstr,
-				Url:     fmt.Sprintf(urlFmt, vstr, vstr),
-                Source:  "apache",
-                CheckType: "sha512",
-                Lts:      false,
-                Latest:   false,
+				Version:   vstr,
+				Url:       fmt.Sprintf(urlFmt, vstr, vstr),
+				Source:    "apache",
+				CheckType: "sha512",
+				Lts:       false,
+				Latest:    false,
 			},
 		})
-		fmt.Println(vstr)
 	}
 	return versions
 }

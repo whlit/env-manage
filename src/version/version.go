@@ -5,7 +5,6 @@ import (
 	"crypto/sha512"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -71,9 +70,9 @@ func (v *EnvVersion) Check(filePath string) (bool, error) {
 		}
 		hashInBytes := hash.Sum(nil)
 		return hex.EncodeToString(hashInBytes) == v.CheckCode, nil
-    case "sha512":
-        hash := sha512.New()
-        _, err = io.Copy(hash, file)
+	case "sha512":
+		hash := sha512.New()
+		_, err = io.Copy(hash, file)
 		if err != nil {
 			return false, err
 		}
@@ -92,7 +91,7 @@ func (v *EnvVersion) Download(filePath string) bool {
 			logger.Error("校验文件失败：", err)
 		}
 		if ok {
-			fmt.Println("版本未更新，不需要重新下载。")
+			logger.Info("版本未更新，不需要重新下载。")
 			return true
 		}
 		os.Remove(filePath)
@@ -102,7 +101,7 @@ func (v *EnvVersion) Download(filePath string) bool {
 	// 创建文件
 	out, err := os.Create(filePath)
 	if err != nil {
-		fmt.Println(err)
+		logger.Warn("创建文件失败：", err)
 		return false
 	}
 	defer out.Close()
@@ -110,24 +109,24 @@ func (v *EnvVersion) Download(filePath string) bool {
 	// 下载文件
 	req, err := http.NewRequest("GET", v.Url, nil)
 	if err != nil {
-		fmt.Println(err)
+		logger.Warn("创建请求失败：", err)
 		return false
 	}
 	req.Header.Set("User-Agent", "Env Manage")
 	response, err := client.Do(req)
 	if err != nil {
-		fmt.Println("Error while downloading", "-", err)
+		logger.Warn("下载失败：", err)
 		return false
 	}
 	defer response.Body.Close()
-	fmt.Println("Downloading... ", v.Url)
+	logger.Info("下载中...", v.Url)
 	_, err = io.Copy(out, response.Body)
 	if err != nil {
-		fmt.Println(err)
+		logger.Warn("下载失败：", err)
 		return false
 	}
-	fmt.Println("Download Completed")
-	fmt.Println("校验文件...")
+	logger.Info("下载完成")
+	logger.Info("校验文件...")
 	// 下载完成 校验文件
 	ok, err := v.Check(filePath)
 	if err != nil {
@@ -136,12 +135,12 @@ func (v *EnvVersion) Download(filePath string) bool {
 	return ok
 }
 
-func Install(versions []VersionDownload, dir string) (VersionDownload, error){
-    if versions == nil || len(versions) < 1 {
-        logger.Warn("未找到任何版本信息")
-        return nil, errors.New("未找到任何版本信息")
-    }
-    var v VersionDownload
+func Install(versions []VersionDownload, dir string) (VersionDownload, error) {
+	if versions == nil || len(versions) < 1 {
+		logger.Warn("未找到任何版本信息")
+		return nil, errors.New("未找到任何版本信息")
+	}
+	var v VersionDownload
 	var options []huh.Option[VersionDownload] = make([]huh.Option[VersionDownload], len(versions))
 	for i, v := range versions {
 		options[i] = huh.NewOption(v.GetVersionKey(), v)
@@ -163,7 +162,7 @@ func Install(versions []VersionDownload, dir string) (VersionDownload, error){
 
 	// 下载完成 开始解压
 	logger.Info("正在解压...")
-    installPath := filepath.Join(dir, v.GetVersionKey())
+	installPath := filepath.Join(dir, v.GetVersionKey())
 	if util.FileExists(installPath) {
 		os.RemoveAll(installPath)
 	}
@@ -175,5 +174,5 @@ func Install(versions []VersionDownload, dir string) (VersionDownload, error){
 	// 解压完成 开始配置
 	logger.Info("解压完成")
 
-    return v, nil
+	return v, nil
 }

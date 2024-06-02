@@ -4,8 +4,18 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/whlit/env-manage/core"
 	"github.com/whlit/env-manage/java"
+	"github.com/whlit/env-manage/logger"
 )
+
+var config = core.NewConfig("jdk", &java.JdkEnvManager{
+	EnvManager: core.EnvManager{
+		EnvName:  "JAVA_HOME",
+		Versions: make(map[string]string),
+		Name:     "jdk",
+	},
+})
 
 func main() {
 	args := os.Args
@@ -14,21 +24,28 @@ func main() {
 		action = args[1]
 	}
 
-	java.InitConfig()
+	config.Load()
 
 	switch action {
 	case "list":
-		java.List()
+		config.Data.List()
 	case "add":
-		java.Add(args[2], args[3])
+		config.Data.Add(args[2], args[3])
 	case "rm":
-		java.Remove()
+		config.Data.Remove()
 	case "use":
-		java.Use()
+		config.Data.Use()
 	case "home":
-		java.Home(args[2])
+		if config.Data.EnvValue == args[2] {
+			return
+		}
+		_, err := config.Data.Home(args[2])
+		if err != nil {
+			logger.Error(err)
+		}
+		config.Save()
 	case "install":
-		java.Install()
+		config.Data.Install()
 	default:
 		help()
 	}

@@ -5,6 +5,6 @@ import (
 )
 
 func TestGetMavenVersions(t *testing.T) {
-    versions := GetMavenVersions()
-    t.Log(versions)
+	versions := GetMavenVersions()
+	t.Log(versions)
 }

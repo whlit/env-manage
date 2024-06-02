@@ -45,7 +45,7 @@ func GetExeDir() string {
 
 // 获取下载文件夹
 func GetDownloadDir() string {
-    return filepath.Join(GetRootDir(), "download")
+	return filepath.Join(GetRootDir(), "download")
 }
 
 // 创建最后一个分隔符之前的目录

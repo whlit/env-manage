@@ -2,7 +2,6 @@ package logger
 
 import (
 	"fmt"
-	"io"
 	"io/fs"
 	"log"
 	"os"
@@ -26,22 +25,27 @@ func init() {
 		fmt.Println("打开日志文件失败:", err)
 		os.Exit(1)
 	}
-	infoLogger = log.New(io.MultiWriter(file, os.Stderr), "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
-	errorLogger = log.New(io.MultiWriter(file, os.Stderr), "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
+	infoLogger = log.New(file, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
+	errorLogger = log.New(file, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
 }
 
 func Infof(format string, v ...any) {
+	fmt.Printf(format, v...)
+	fmt.Println()
 	infoLogger.Printf(format, v...)
 }
 
 func Info(v ...any) {
+	fmt.Println(v...)
 	infoLogger.Println(v...)
 }
 
 func Error(v ...any) {
+	fmt.Println(v...)
 	errorLogger.Fatalln(v...)
 }
 
 func Warn(v ...any) {
+	fmt.Println(v...)
 	infoLogger.Panicln(v...)
 }

@@ -14,7 +14,7 @@ type Table struct {
 }
 
 // 新建表格
-func NewTable(columns []string) *Table {
+func NewTable(columns ...string) *Table {
 	return &Table{
 		Columns: columns,
 		data:    make([]map[string]string, 0),

@@ -31,7 +31,7 @@ type OracleJdk struct {
 }
 
 func (jdk *OracleJdk) getDownloadFilePath() string {
-    return filepath.Join(util.GetDownloadDir(), "jdk", jdk.GetVersionKey(), filepath.Base(jdk.Url))
+	return filepath.Join(util.GetDownloadDir(), "jdk", jdk.GetVersionKey(), filepath.Base(jdk.Url))
 }
 
 // 获取OracleJDK的校验码
@@ -97,7 +97,7 @@ type AdoptiumJdk struct {
 }
 
 func (jdk *AdoptiumJdk) getDownloadFilePath() string {
-    return filepath.Join(util.GetDownloadDir(), "jdk", jdk.GetVersionKey(), filepath.Base(jdk.Url))
+	return filepath.Join(util.GetDownloadDir(), "jdk", jdk.GetVersionKey(), filepath.Base(jdk.Url))
 }
 
 // 下载AdoptiumJdk

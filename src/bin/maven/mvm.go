@@ -3,8 +3,18 @@ package main
 import (
 	"os"
 
+	"github.com/whlit/env-manage/core"
+	"github.com/whlit/env-manage/logger"
 	"github.com/whlit/env-manage/maven"
 )
+
+var config = core.NewConfig("maven", &maven.MavenEnvManager{
+	EnvManager: core.EnvManager{
+		EnvName:  "M2_HOME",
+		Versions: make(map[string]string),
+		Name:     "maven",
+	},
+})
 
 func main() {
 	args := os.Args
@@ -13,21 +23,28 @@ func main() {
 		action = args[1]
 	}
 
-	maven.InitConfig()
+	config.Load()
 
 	switch action {
 	case "list":
-		maven.List()
+		config.Data.List()
 	case "add":
-		maven.Add(args[2], args[3])
+		config.Data.Add(args[2], args[3])
 	case "rm":
-		maven.Remove()
+		config.Data.Remove()
 	case "use":
-		maven.Use()
+		config.Data.Use()
 	case "home":
-		maven.Home(args[2])
+		if config.Data.EnvValue == args[2] {
+			return
+		}
+		_, err := config.Data.Home(args[2])
+		if err != nil {
+			logger.Error(err)
+		}
+		config.Save()
 	case "install":
-		maven.Install()
+		config.Data.Install()
 	default:
 		help()
 	}

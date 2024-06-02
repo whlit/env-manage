@@ -19,13 +19,13 @@ import (
 func GetEnvironmentValue(name string) (string, error) {
 	key, err := registry.OpenKey(registry.CURRENT_USER, "Environment", registry.QUERY_VALUE)
 	if err != nil {
-		fmt.Println("无法打开键：", err)
+		logger.Warn("无法打开键：", err)
 		return "", err
 	}
 	defer key.Close()
 	value, _, err := key.GetStringValue(name)
 	if err != nil {
-		fmt.Println("无法读取值：", err)
+		logger.Warn("无法读取值：", err)
 		return "", err
 	}
 	return value, nil
@@ -35,7 +35,7 @@ func GetEnvironmentValue(name string) (string, error) {
 func SetEnvironmentValue(name string, value string) error {
 	key, err := registry.OpenKey(registry.CURRENT_USER, "Environment", registry.QUERY_VALUE)
 	if err != nil {
-		fmt.Println("无法打开键：", err)
+		logger.Warn("无法打开键：", err)
 		return err
 	}
 	defer key.Close()
@@ -43,8 +43,8 @@ func SetEnvironmentValue(name string, value string) error {
 	if oldValue == value {
 		return nil
 	}
-	logger.Infof("写入环境变量:%s, \n    旧值:'%s',  \n    新值:'%s'", name, oldValue, value)
 	_, err = run("reg", nil, "add", "HKEY_CURRENT_USER\\Environment", "/v", name, "/t", "REG_SZ", "/d", value, "/f")
+	logger.Infof("写入环境变量:%s, \n    旧值:'%s',  \n    新值:'%s'", name, oldValue, value)
 	return err
 }
 
@@ -52,7 +52,7 @@ func SetEnvironmentValue(name string, value string) error {
 func AddToPath(value string) {
 	pathEnv, err := GetEnvironmentValue("Path")
 	if err != nil {
-		fmt.Println("获取Path环境变量失败")
+		logger.Error("获取Path环境变量失败", err)
 	}
 	paths := strings.Split(pathEnv, ";")
 	var existed = false
@@ -79,7 +79,7 @@ func AddToPath(value string) {
 func RemoveFromPath(value string) {
 	pathEnv, err := GetEnvironmentValue("Path")
 	if err != nil {
-		fmt.Println("获取Path环境变量失败")
+		logger.Error("获取Path环境变量失败", err)
 	}
 	paths := strings.Split(pathEnv, ";")
 	var newPaths []string
