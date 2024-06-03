@@ -48,7 +48,7 @@ func (jdk *JdkEnvManager) Home(jhomePath string) (bool, error) {
 }
 
 func (jdk *JdkEnvManager) Install() {
-	dir := filepath.Join(util.GetRootDir(), "versions", "jdk")
+	dir := filepath.Join(util.GetRootDir(), "versions", jdk.Name)
 	jdkVersion, err := version.Install(version.GetJdkVersions(), dir)
 	if err != nil {
 		logger.Error("安装失败", err)

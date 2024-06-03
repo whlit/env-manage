@@ -51,6 +51,7 @@ func (v *EnvVersion) GetVersionKey() string {
 
 // 校验下载的文件
 func (v *EnvVersion) Check(filePath string) (bool, error) {
+    logger.Info("校验文件")
 	if !util.FileExists(filePath) {
 		return false, errors.New("文件不存在")
 	}
@@ -126,7 +127,6 @@ func (v *EnvVersion) Download(filePath string) bool {
 		return false
 	}
 	logger.Info("下载完成")
-	logger.Info("校验文件...")
 	// 下载完成 校验文件
 	ok, err := v.Check(filePath)
 	if err != nil {
@@ -156,7 +156,7 @@ func Install(versions []VersionDownload, dir string) (VersionDownload, error) {
 
 	zipPath, err := v.Download()
 	if err != nil {
-		logger.Warn("下载失败")
+		logger.Warn("下载失败", err)
 		return nil, err
 	}
 

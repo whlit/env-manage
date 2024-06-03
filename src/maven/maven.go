@@ -48,7 +48,7 @@ func (maven *MavenEnvManager) Home(homePath string) (bool, error) {
 }
 
 func (maven *MavenEnvManager) Install() {
-	dir := filepath.Join(util.GetRootDir(), "versions", "maven")
+	dir := filepath.Join(util.GetRootDir(), "versions", maven.Name)
 	versions, err := version.Install(version.GetMavenVersions(), dir)
 	if err != nil {
 		logger.Error("安装失败", err)
