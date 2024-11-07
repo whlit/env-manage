@@ -1,8 +1,10 @@
 package core
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/charmbracelet/huh"
@@ -55,8 +57,11 @@ func (m *EnvManager) Add(name string, path string) {
 	version := &Version{}
 	version.Version = name
 	version.Path = path
-	m.Versions = append(m.Versions, *version)
-	SaveConfig()
+    if mg, ok := GlobalConfig.Managers[m.Name]; ok {
+        mg.Versions = append(mg.Versions, *version)
+        GlobalConfig.Managers[m.Name] = mg
+        SaveConfig()
+    }
 }
 
 // 移除版本
@@ -76,14 +81,17 @@ func (m *EnvManager) Remove() {
 	var confirm bool
 	huh.NewConfirm().Title(strings.Join([]string{"确认删除 ", version.Version, " ?"}, "")).Value(&confirm).Run()
 	if confirm {
-		vs := m.Versions[:0]
-		for _, v := range m.Versions {
-			if v.Version != version.Version {
-				vs = append(vs, v)
-			}
-		}
-		m.Versions = vs
-		SaveConfig()
+        if mg, ok := GlobalConfig.Managers[m.Name]; ok {
+            var vs []Version
+            for _, v := range mg.Versions {
+                if v.Version != version.Version {
+                    vs = append(vs, v)
+                }
+            }
+            mg.Versions = vs
+            GlobalConfig.Managers[m.Name] = mg
+            SaveConfig()
+        }
 	}
 }
 
@@ -112,12 +120,17 @@ func (m *EnvManager) Use() {
 
 // 安装
 func (m *EnvManager) Install() {
-
+    fmt.Println("不支持在线安装: ", m.Name)
 }
 
 // 创建环境变量
 func (m *EnvManager) CreateEnvs() {
-
+    if runtime.GOOS == "windows" {
+        util.SetWindowsEnvs(m.Envs["windows"])
+        logger.Info("/n 环境变量设置成功，请重新启动命令行 /n")
+        return
+    }
+    logger.Error("暂不支持自动创建该系统环境变量，请手动设置")
 }
 
 func RegisterEnvManager(manager EnvManager) {

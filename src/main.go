@@ -42,6 +42,8 @@ func manageEnv(action string, manager core.IEnvManager, args []string) {
 		manager.List()
 	case "install":
 		manager.Install()
+    case "init":
+        manager.CreateEnvs()
 	default:
 		help()
 	}
