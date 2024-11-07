@@ -1,6 +1,7 @@
 package core
 
 import (
+	"io/fs"
 	"os"
 	"path/filepath"
 
@@ -9,74 +10,66 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type Config[T any] struct {
-	Data T
-	name string
+const (
+	CONFIG_FILE_NAME     = "config.yml"
+	CONFIG_DIR           = "config"
+	DEFAULT_DOWNLOAD_DIR = "download"
+	DEFAULT_VERSIONS_DIR = "versions"
+	DEFAULT_RUNTIME_DIR  = "runtime"
+)
+
+type Config struct {
+	VersionsDir string                `yaml:"versions_dir"`
+	RuntimeDir  string                `yaml:"runtime_dir"`
+	DownloadDir string                `yaml:"download_dir"`
+	Managers    map[string]EnvManager `yaml:"managers"`
 }
 
-// 加载配置
-func (c *Config[T]) Load() {
-	file, err := os.ReadFile(getFilePath())
-	if err != nil {
-		logger.Error("配置文件读取失败,", getFilePath(), err)
-	}
-	var config map[string]T
-	yaml.Unmarshal(file, &config)
-	if config == nil {
+var GlobalConfig = Config{}
+
+func init() {
+	root := util.GetRootDir()
+	path := filepath.Join(root, CONFIG_DIR, CONFIG_FILE_NAME)
+	// 读取配置
+	if util.FileExists(path) {
+		file, err := os.ReadFile(path)
+		if err != nil {
+			logger.Error("配置文件读取失败,", path, err)
+			os.Exit(1)
+		}
+		err = yaml.Unmarshal(file, &GlobalConfig)
+		if err != nil {
+			logger.Error("配置文件解析失败,", path, err)
+			os.Exit(1)
+		}
 		return
 	}
-	if _, ok := config[c.name]; ok {
-		c.Data = config[c.name]
+	// 初始化配置 并创建配置文件
+	util.MkBaseDir(path)
+	os.Create(path)
+	GlobalConfig = Config{
+		VersionsDir: DEFAULT_VERSIONS_DIR,
+		RuntimeDir:  DEFAULT_RUNTIME_DIR,
+		DownloadDir: DEFAULT_DOWNLOAD_DIR,
+		Managers:    map[string]EnvManager{},
 	}
+	// 创建默认文件夹
+	os.MkdirAll(filepath.Join(root, GlobalConfig.VersionsDir), fs.ModeDir)
+	os.MkdirAll(filepath.Join(root, GlobalConfig.RuntimeDir), fs.ModeDir)
+	os.MkdirAll(filepath.Join(root, GlobalConfig.DownloadDir), fs.ModeDir)
+	SaveConfig()
 }
 
 // 保存配置
-func (c *Config[T]) Save() {
-	var config map[string]any
-	file, err := os.ReadFile(getFilePath())
+func SaveConfig() error {
+	data, err := yaml.Marshal(GlobalConfig)
 	if err != nil {
-		logger.Error("配置文件读取失败,", getFilePath(), err)
+		logger.Warn("序列化配置失败: ", err)
+		return err
 	}
-	yaml.Unmarshal(file, &config)
-	if config == nil {
-		config = make(map[string]any)
-	}
-	config[c.name] = c.Data
-	data, err := yaml.Marshal(config)
+	err = os.WriteFile(filepath.Join(util.GetRootDir(), CONFIG_DIR, CONFIG_FILE_NAME), data, 0644)
 	if err != nil {
 		logger.Warn("保存配置文件失败: ", err)
 	}
-	os.WriteFile(getFilePath(), data, 0644)
-}
-
-// 新建一个配置
-func NewConfig[T any](name string, config T) *Config[T] {
-	return &Config[T]{
-		Data: config,
-		name: name,
-	}
-}
-
-// 获取配置文件路径
-func getFilePath() string {
-	path := filepath.Join(util.GetRootDir(), "config", "config.yml")
-	if !util.FileExists(path) {
-		util.MkBaseDir(path)
-		os.Create(path)
-	}
-	return path
-}
-
-// 获取所有配置名称
-func GetConfigs() map[string]any {
-	var config map[string]any
-	file, err := os.ReadFile(getFilePath())
-	if err != nil {
-		logger.Error("配置文件读取失败,", getFilePath(), err)
-	}
-	yaml.Unmarshal(file, &config)
-	if config == nil {
-		config = make(map[string]any)
-	}
-	return config
+	return err
 }

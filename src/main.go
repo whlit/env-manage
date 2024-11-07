@@ -3,17 +3,13 @@ package main
 import (
 	"fmt"
 	"os"
-	"path/filepath"
-	"strings"
 
-	"github.com/charmbracelet/huh"
 	"github.com/whlit/env-manage/core"
-	"github.com/whlit/env-manage/java"
 	"github.com/whlit/env-manage/logger"
-	"github.com/whlit/env-manage/maven"
-	"github.com/whlit/env-manage/node"
-	"github.com/whlit/env-manage/util"
+	"github.com/whlit/env-manage/manager"
 )
+
+var managers = make(map[string]core.IEnvManager)
 
 func main() {
 	args := os.Args[1:]
@@ -21,64 +17,17 @@ func main() {
 		help()
 		return
 	}
-	name := args[0]
-	if len(args) < 2 {
-		fmt.Println("需要指定要执行的动作: [add|rm|list|use|install|create]")
+
+	initManagers()
+
+	if m, ok := managers[args[0]]; ok {
+		manageEnv(args[1], m, args[2:])
+	} else {
 		help()
-		return
-	}
-	action := args[1]
-	switch name {
-	case "jdk":
-		config := core.NewConfig("jdk", &java.JdkEnvManager{
-			EnvManager: core.EnvManager{
-				EnvName:  "JAVA_HOME",
-				Versions: make(map[string]string),
-				Name:     "jdk",
-			},
-		})
-		config.Load()
-		manage(action, config.Data, args[2:])
-		config.Save()
-	case "maven":
-		config := core.NewConfig("maven", &maven.MavenEnvManager{
-			EnvManager: core.EnvManager{
-				EnvName:  "M2_HOME",
-				Versions: make(map[string]string),
-				Name:     "maven",
-			},
-		})
-		config.Load()
-		manage(action, config.Data, args[2:])
-		config.Save()
-    case "node":
-        config := core.NewConfig("node", &node.NodeEnvManager{
-            EnvManager: core.EnvManager{
-                EnvName:  "NODE_HOME",
-                EnvPathValue: "%NODE_HOME%",
-                Versions: make(map[string]string),
-                Name:     "node",
-            },
-        })
-        config.Load()
-        manage(action, config.Data, args[2:])
-        config.Save()
-	default:
-		config := core.NewConfig(name, &core.EnvManager{})
-		config.Load()
-		if config.Data == nil || config.Data.Name == "" {
-			if action != "create" {
-				logger.Error(fmt.Sprintf("不支持[%s]的版本管理,请先创建", name))
-			}
-			create(name)
-			return
-		}
-		manage(action, config.Data, args[2:])
-		config.Save()
 	}
 }
 
-func manage(action string, manager core.IEnvManager, args []string) {
+func manageEnv(action string, manager core.IEnvManager, args []string) {
 	switch action {
 	case "add":
 		if len(args) < 2 {
@@ -92,48 +41,10 @@ func manage(action string, manager core.IEnvManager, args []string) {
 	case "list":
 		manager.List()
 	case "install":
-		if _, ok := manager.(core.IInstallable); ok {
-			manager.(core.IInstallable).Install()
-		}
+		manager.Install()
+	default:
+		help()
 	}
-}
-
-func create(name string) {
-	var envName string
-	var envPathValue string
-	huh.NewForm(huh.NewGroup(
-		huh.NewInput().Title("输入要添加的环境变量名称:\n(例如:JDK环境变量名称为JAVA_HOME)").Value(&envName),
-		huh.NewInput().Title("输入要添加到Path的值:\n(例如:JDK添加到Path为:%JAVA_HOME%\\bin").Value(&envPathValue),
-	)).Run()
-	envName = strings.TrimSpace(envName)
-	envPathValue = strings.TrimSpace(envPathValue)
-	if envName == "" || envPathValue == "" {
-		logger.Error("输入不能为空")
-	}
-
-	envValue := filepath.Join(util.GetRootDir(), "runtime", name)
-	table := util.NewTable("Name", "EnvName", "EnvValue", "EnvPathValue").Add(map[string]string{
-		"Name":         name,
-		"EnvName":      envName,
-		"EnvValue":     envValue,
-		"EnvPathValue": envPathValue,
-	})
-	var confirm bool
-	huh.NewConfirm().Title(strings.Join(append([]string{"确认从以下信息创建版本管理?"}, table.Sprintf()...), "\n")).Value(&confirm).Run()
-	if !confirm {
-		logger.Error("用户取消操作")
-	}
-	config := core.NewConfig(name, &core.EnvManager{
-		Name:         name,
-		EnvName:      envName,
-		EnvValue:     envValue,
-		EnvPathValue: envPathValue,
-		Versions:     make(map[string]string),
-	})
-	logger.Infof("创建版本管理:\n    Name: '%s',\n    EnvName: '%s',\n    EnvValue: '%s',\n    EnvPathValue: '%s'",
-		config.Data.Name, config.Data.EnvName, config.Data.EnvValue, config.Data.EnvPathValue)
-	config.Save()
-	logger.Info("创建成功")
 }
 
 func help() {
@@ -141,7 +52,7 @@ func help() {
 	fmt.Println("Name:                      环境管理的名称")
 	fmt.Println("  jdk                      jdk版本管理")
 	fmt.Println("  maven                    maven版本管理")
-    fmt.Println("  node                     node版本管理")
+	fmt.Println("  node                     node版本管理")
 	fmt.Println("  <name>                   用create创建的其他版本管理的名称")
 	fmt.Println("Actions:")
 	fmt.Println("  create                   创建一个自定义版本管理")
@@ -150,4 +61,18 @@ func help() {
 	fmt.Println("  list                     查询所有已添加的版本管理")
 	fmt.Println("  use                      使用版本")
 	fmt.Println("  install                  在线安装新版本,自定义的版本管理不支持")
+}
+
+func initManagers() {
+	for name, manager := range core.GlobalConfig.Managers {
+		managers[name] = &manager
+	}
+	if m, ok := core.GlobalConfig.Managers["jdk"]; ok {
+		managers["jdk"] = &manager.JdkEnvManager{EnvManager: m}
+	} else {
+		m := manager.NewJdkManager()
+		managers["jdk"] = &manager.JdkEnvManager{EnvManager: m}
+		core.GlobalConfig.Managers["jdk"] = m
+		core.SaveConfig()
+	}
 }

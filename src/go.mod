@@ -4,7 +4,6 @@ go 1.21.4
 
 require (
 	github.com/charmbracelet/huh v0.4.2
-	golang.org/x/exp v0.0.0-20240525044651-4c93da0ed11d
 	golang.org/x/sys v0.20.0
 	golang.org/x/text v0.15.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -33,5 +32,6 @@ require (
 	github.com/muesli/termenv v0.15.2 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
+	golang.org/x/exp v0.0.0-20240525044651-4c93da0ed11d // indirect
 	golang.org/x/sync v0.7.0 // indirect
 )

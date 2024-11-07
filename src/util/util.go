@@ -2,10 +2,16 @@ package util
 
 import (
 	"archive/zip"
+	"bytes"
+	"errors"
+	"fmt"
 	"io"
 	"io/fs"
+	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/whlit/env-manage/logger"
@@ -13,6 +19,8 @@ import (
 
 var root string
 var exeDir string
+var client = &http.Client{}
+
 
 // 获取根目录 获取失败则直接退出程序
 // 本方法以当前可执行文件所在的目录为bin目录为前提
@@ -128,4 +136,55 @@ func Unzip(zipPath, dir string) error {
 func FileExists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
+}
+
+// 创建文件夹链接
+// linkPath 要创建的链接文件夹路径
+// target 目标文件夹路径
+// windows下使用目录链接 即 mklink /J linkPath target
+func CreateLink(linkPath, target string) error {
+    if runtime.GOOS == "windows" {
+        _, err := run("cmd", nil, "/C", "mklink", "/J", linkPath, target)
+        return err
+    }
+    return os.Symlink(linkPath, target)
+}
+
+// 运行命令
+func run(name string, dir *string, arg ...string) (bool, error) {
+	c := exec.Command(name, arg...)
+	if dir != nil {
+		c.Dir = *dir
+	}
+	var stderr bytes.Buffer
+	c.Stderr = &stderr
+	err := c.Run()
+	if err != nil {
+		return false, errors.New(fmt.Sprint(err) + ": " + stderr.String())
+	}
+
+	return true, nil
+}
+
+func GetHttpClient() *http.Client {
+    return client
+}
+
+// 发送get请求
+func Get(url string) ([]byte, error) {
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("User-Agent", "Env Manage")
+	response, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer response.Body.Close()
+	code, err := io.ReadAll(response.Body)
+	if err != nil {
+		return nil, err
+	}
+	return code, nil
 }
