@@ -25,21 +25,6 @@ echo ----------------------------
 echo Building jvm.exe
 echo ----------------------------
 
-if exist .\jvm.exe (
-  del .\jvm.exe
-)
-go build -o jvm.exe .\bin\java\jvm.go
-
-
-echo ----------------------------
-echo Building mvm.exe
-echo ----------------------------
-
-if exist .\mvm.exe (
-  del .\mvm.exe
-)
-go build -o mvm.exe .\bin\maven\mvm.go
-
 move .\*.exe %ROOT_DIR%\dist\unpack\bin
 
 echo ----------------------------
