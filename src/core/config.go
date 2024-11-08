@@ -1,7 +1,6 @@
 package core
 
 import (
-	"io/fs"
 	"os"
 	"path/filepath"
 
@@ -54,9 +53,9 @@ func init() {
 		Managers:    map[string]EnvManager{},
 	}
 	// 创建默认文件夹
-	os.MkdirAll(filepath.Join(root, GlobalConfig.VersionsDir), fs.ModeDir)
-	os.MkdirAll(filepath.Join(root, GlobalConfig.RuntimeDir), fs.ModeDir)
-	os.MkdirAll(filepath.Join(root, GlobalConfig.DownloadDir), fs.ModeDir)
+	os.MkdirAll(filepath.Join(root, GlobalConfig.VersionsDir), 00755)
+	os.MkdirAll(filepath.Join(root, GlobalConfig.RuntimeDir), 00755)
+	os.MkdirAll(filepath.Join(root, GlobalConfig.DownloadDir), 00755)
 	SaveConfig()
 }
 

@@ -3,7 +3,6 @@ package util
 import (
 	"archive/zip"
 	"io"
-	"io/fs"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -17,7 +16,6 @@ import (
 var root string
 var exeDir string
 var client = &http.Client{}
-
 
 // 获取根目录 获取失败则直接退出程序
 // 本方法以当前可执行文件所在的目录为bin目录为前提
@@ -59,7 +57,7 @@ func MkBaseDir(path string) {
 	if os.IsNotExist(err) {
 		_, err = os.Stat(filepath.Dir(path))
 		if os.IsNotExist(err) {
-			os.MkdirAll(filepath.Dir(path), fs.ModeDir)
+			os.MkdirAll(filepath.Dir(path), 00755)
 		}
 	}
 }
@@ -135,10 +133,8 @@ func FileExists(path string) bool {
 	return err == nil
 }
 
-
-
 func GetHttpClient() *http.Client {
-    return client
+	return client
 }
 
 // 发送get请求
@@ -160,33 +156,32 @@ func Get(url string) ([]byte, error) {
 	return code, nil
 }
 
-
 var reg, _ = regexp.Compile(`[^\d|\.]`)
 
 func CompareVersion(v1, v2 string) int {
-    if v1 == v2 {
-        return 0
-    }
-    v1 = reg.ReplaceAllString(v1, "")
-    v2 = reg.ReplaceAllString(v2, "")
-    v1s := strings.Split(v1, ".")
-    v2s := strings.Split(v2, ".")
-    l1 := len(v1s)
-    l2 := len(v2s)
-    for i := 0; i < l1 || i < l2; i++ {
-        i1 := 0
-        if i < l1 {
-            i1, _ = strconv.Atoi(v1s[i])
-        }
-        i2 := 0
-        if i < l2 {
-            i2, _ = strconv.Atoi(v2s[i])
-        }
-        if i1 > i2 {
-            return 1
-        } else if i1 < i2 {
-            return -1
-        }
-    }
-    return 0
+	if v1 == v2 {
+		return 0
+	}
+	v1 = reg.ReplaceAllString(v1, "")
+	v2 = reg.ReplaceAllString(v2, "")
+	v1s := strings.Split(v1, ".")
+	v2s := strings.Split(v2, ".")
+	l1 := len(v1s)
+	l2 := len(v2s)
+	for i := 0; i < l1 || i < l2; i++ {
+		i1 := 0
+		if i < l1 {
+			i1, _ = strconv.Atoi(v1s[i])
+		}
+		i2 := 0
+		if i < l2 {
+			i2, _ = strconv.Atoi(v2s[i])
+		}
+		if i1 > i2 {
+			return 1
+		} else if i1 < i2 {
+			return -1
+		}
+	}
+	return 0
 }

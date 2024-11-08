@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"io"
-	"io/fs"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -41,7 +40,7 @@ func (v *Version) Download() error {
 		os.Remove(path)
 	}
 
-    os.MkdirAll(filepath.Dir(path), fs.ModeDir)
+	os.MkdirAll(filepath.Dir(path), 00755)
 	out, err := os.Create(path)
 	if err != nil {
 		logger.Error("创建文件失败：", err)

@@ -2,7 +2,6 @@ package logger
 
 import (
 	"fmt"
-	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
@@ -19,7 +18,7 @@ func init() {
 	}
 	root := filepath.Dir(filepath.Dir(exePath))
 	logFile := filepath.Join(root, "log", "sys.log")
-	os.MkdirAll(filepath.Dir(logFile), fs.ModeDir)
+	os.MkdirAll(filepath.Dir(logFile), 0755)
 	file, err := os.OpenFile(logFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		fmt.Println("打开日志文件失败:", err)
