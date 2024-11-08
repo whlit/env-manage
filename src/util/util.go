@@ -11,7 +11,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 
 	"github.com/whlit/env-manage/logger"
@@ -250,4 +252,34 @@ func appendEnvs(envs, items []string) []string {
         }
     }
     return res
+}
+
+var reg, _ = regexp.Compile(`[^\d|\.]`)
+
+func CompareVersion(v1, v2 string) int {
+    if v1 == v2 {
+        return 0
+    }
+    v1 = reg.ReplaceAllString(v1, "")
+    v2 = reg.ReplaceAllString(v2, "")
+    v1s := strings.Split(v1, ".")
+    v2s := strings.Split(v2, ".")
+    l1 := len(v1s)
+    l2 := len(v2s)
+    for i := 0; i < l1 || i < l2; i++ {
+        i1 := 0
+        if i < l1 {
+            i1, _ = strconv.Atoi(v1s[i])
+        }
+        i2 := 0
+        if i < l2 {
+            i2, _ = strconv.Atoi(v2s[i])
+        }
+        if i1 > i2 {
+            return 1
+        } else if i1 < i2 {
+            return -1
+        }
+    }
+    return 0
 }

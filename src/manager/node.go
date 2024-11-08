@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"strings"
 
 	"github.com/charmbracelet/huh"
@@ -59,7 +60,7 @@ func (m *NodeEnvManager) Install() {
 		logger.Error("解压失败：", err)
 	}
 	if mg, ok := core.GlobalConfig.Managers[m.Name]; ok {
-        version.Path = filepath.Join(versionPath, version.Version)
+        version.Path = filepath.Join(versionPath, version.FileName[:strings.LastIndex(version.FileName, ".")])
 		mg.Versions = append(mg.Versions, version)
 		core.GlobalConfig.Managers[m.Name] = mg
 		core.SaveConfig()
@@ -76,6 +77,9 @@ func (m *NodeEnvManager) selectVersion(versions map[string][]core.Version) core.
 		}
 	}
 	var version core.Version
+    sort.SliceStable(options, func(i, j int) bool {
+        return util.CompareVersion(options[i].Value.Version, options[j].Value.Version) > 0
+    })
 	huh.NewSelect[core.Version]().Options(options...).Value(&version).Run()
 	return version
 }

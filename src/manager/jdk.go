@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"strings"
 
 	"github.com/charmbracelet/huh"
@@ -76,7 +77,10 @@ func (m *JdkEnvManager) selectVersion(versions map[string][]core.Version) core.V
 			}
 		}
 	}
-	var version core.Version
+    sort.SliceStable(options, func(i, j int) bool {
+        return util.CompareVersion(options[i].Value.Version, options[j].Value.Version) > 0
+    })
+    var version core.Version
 	huh.NewSelect[core.Version]().Options(options...).Value(&version).Run()
 	return version
 }
