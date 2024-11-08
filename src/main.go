@@ -72,9 +72,18 @@ func initManagers() {
 	if m, ok := core.GlobalConfig.Managers["jdk"]; ok {
 		managers["jdk"] = &manager.JdkEnvManager{EnvManager: m}
 	} else {
-		m := manager.NewJdkManager()
+		m := manager.NewManagerForJdk()
 		managers["jdk"] = &manager.JdkEnvManager{EnvManager: m}
 		core.GlobalConfig.Managers["jdk"] = m
 		core.SaveConfig()
 	}
+
+    if m, ok := core.GlobalConfig.Managers["node"]; ok {
+        managers["node"] = &manager.NodeEnvManager{EnvManager: m}
+    } else {
+        m := manager.NewManagerForNode()
+        managers["node"] = &manager.NodeEnvManager{EnvManager: m}
+        core.GlobalConfig.Managers["node"] = m
+        core.SaveConfig()
+    }
 }

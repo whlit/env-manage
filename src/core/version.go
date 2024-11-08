@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"io"
+	"io/fs"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -21,8 +22,8 @@ type Version struct {
 	Os       string `yaml:"os" json:"os"`
 	Arch     string `yaml:"arch" json:"arch"`
 	Url      string `yaml:"url" json:"url"`
-	Sum      string `yaml:"sum" json:"checksum"`
-	SumType  string `yaml:"sum_type" json:"checksum_type"`
+	Sum      string `yaml:"sum" json:"sum"`
+	SumType  string `yaml:"sum_type" json:"sum_type"`
 	Latest   bool   `yaml:"latest" json:"latest"`
 	FileName string `yaml:"file_name" json:"file_name"`
 	FileType string `yaml:"file_type" json:"file_type"`
@@ -40,6 +41,7 @@ func (v *Version) Download() error {
 		os.Remove(path)
 	}
 
+    os.MkdirAll(filepath.Dir(path), fs.ModeDir)
 	out, err := os.Create(path)
 	if err != nil {
 		logger.Error("创建文件失败：", err)
