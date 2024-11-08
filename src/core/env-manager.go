@@ -127,7 +127,7 @@ func (m *EnvManager) Install() {
 func (m *EnvManager) CreateEnvs() {
     if runtime.GOOS == "windows" {
         util.SetWindowsEnvs(m.Envs["windows"])
-        logger.Info("/n 环境变量设置成功，请重新启动命令行 /n")
+        logger.Info("\n 环境变量设置成功，请重新启动命令行 \n")
         return
     }
     logger.Error("暂不支持自动创建该系统环境变量，请手动设置")

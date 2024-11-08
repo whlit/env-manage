@@ -86,4 +86,13 @@ func initManagers() {
         core.GlobalConfig.Managers["node"] = m
         core.SaveConfig()
     }
+
+    if m, ok := core.GlobalConfig.Managers["maven"]; ok {
+        managers["maven"] = &manager.MavenEnvManager{EnvManager: m}
+    } else {
+        m := manager.NewManagerForMaven()
+        managers["maven"] = &manager.MavenEnvManager{EnvManager: m}
+        core.GlobalConfig.Managers["maven"] = m
+        core.SaveConfig()
+    }
 }
