@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/whlit/env-manage/bin/windows/util"
 	"github.com/whlit/env-manage/core"
 	"github.com/whlit/env-manage/logger"
 	"github.com/whlit/env-manage/manager"
@@ -37,13 +38,21 @@ func manageEnv(action string, manager core.IEnvManager, args []string) {
 	case "rm":
 		manager.Remove()
 	case "use":
-		manager.Use()
+		linkPath, target, err:= manager.Use()
+        if err != nil {
+            logger.Error("Error: ", err)
+        }
+        err = util.CreateLink(linkPath, target)
+        if err != nil {
+            logger.Error("Error: ", err)
+        }
+        logger.Info("Use version successfully")
 	case "list":
 		manager.List()
 	case "install":
 		manager.Install()
     case "init":
-        manager.CreateEnvs()
+        util.SetWindowsEnvs(manager.GetEnvs())
 	default:
 		help()
 	}
@@ -96,3 +105,4 @@ func initManagers() {
         core.SaveConfig()
     }
 }
+

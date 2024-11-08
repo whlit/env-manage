@@ -1,6 +1,7 @@
 package core
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -16,9 +17,9 @@ type IEnvManager interface {
 	List()
 	Add(name string, path string)
 	Remove()
-	Use()
+	Use() (string, string, error)
 	Install()
-	CreateEnvs()
+	GetEnvs() map[string][]string
 }
 
 type EnvManager struct {
@@ -96,10 +97,9 @@ func (m *EnvManager) Remove() {
 }
 
 // 使用版本
-func (m *EnvManager) Use() {
+func (m *EnvManager) Use() (string, string, error) {
 	if m.Versions == nil || len(m.Versions) == 0 {
-		logger.Info("未添加任何版本")
-		return
+		return "", "", errors.New("未添加任何版本")
 	}
 	// 选择版本
 	var version Version
@@ -114,8 +114,7 @@ func (m *EnvManager) Use() {
 	if util.FileExists(path) {
 		os.Remove(path)
 	}
-	util.CreateLink(path, version.Path)
-	logger.Info("成功切换版本为", version.Version)
+    return path, version.Path, nil
 }
 
 // 安装
@@ -124,13 +123,12 @@ func (m *EnvManager) Install() {
 }
 
 // 创建环境变量
-func (m *EnvManager) CreateEnvs() {
-    if runtime.GOOS == "windows" {
-        util.SetWindowsEnvs(m.Envs["windows"])
-        logger.Info("\n 环境变量设置成功，请重新启动命令行 \n")
-        return
+func (m *EnvManager) GetEnvs() map[string][]string {
+    if _, ok := m.Envs[runtime.GOOS]; ok {
+        return m.Envs[runtime.GOOS]
     }
     logger.Error("暂不支持自动创建该系统环境变量，请手动设置")
+    return nil
 }
 
 func RegisterEnvManager(manager EnvManager) {
