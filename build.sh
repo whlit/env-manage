@@ -38,5 +38,13 @@ echo Building uninstall.exe
 
 go build -o $root/dist/unpack/uninstall.exe $root/src/bin/windows/uninstall/uninstall.go
 
+echo Building env-manage.tar.gz
 
+tar -zcf $root/dist/env-manage.tar.gz -C $root/dist/unpack .
+
+echo Building env-manage.zip
+
+cd $root/dist/unpack
+
+zip -qr $root/dist/env-manage.zip .
 
