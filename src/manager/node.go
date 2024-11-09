@@ -47,7 +47,13 @@ func (m *NodeEnvManager) Install() {
 	if err != nil {
 		logger.Error("解析Node版本信息失败", err, string(data))
 	}
-	version := m.selectVersion(versions)
+	selectFileType := "zip"
+	if os == "windows" {
+		selectFileType = "zip"
+	} else if os == "linux" {
+		selectFileType = "tar.gz"
+	}
+	version := m.selectVersion(versions, selectFileType)
 	version.App = m.Name
 
 	err = version.Download()
@@ -55,23 +61,27 @@ func (m *NodeEnvManager) Install() {
 		logger.Error("下载Node版本失败", err)
 	}
     versionPath := version.GetVersionsPath()
-	err = util.Unzip(version.GetDownloadFilePath(), versionPath)
+	if version.FileType == "zip" {
+		err = util.Unzip(version.GetDownloadFilePath(), versionPath)
+	} else if version.FileType == "tar.gz" {
+		err = util.UnTarGz(version.GetDownloadFilePath(), versionPath)
+	}
 	if err != nil {
 		logger.Error("解压失败：", err)
 	}
 	if mg, ok := core.GlobalConfig.Managers[m.Name]; ok {
-        version.Path = filepath.Join(versionPath, version.FileName[:strings.LastIndex(version.FileName, ".")])
+        version.Path = filepath.Join(versionPath, version.FileName[:len(version.FileName)-len(version.FileType)-1])
 		mg.Versions = append(mg.Versions, version)
 		core.GlobalConfig.Managers[m.Name] = mg
 		core.SaveConfig()
 		logger.Info("安装成功")
 	}
 }
-func (m *NodeEnvManager) selectVersion(versions map[string][]core.Version) core.Version {
+func (m *NodeEnvManager) selectVersion(versions map[string][]core.Version, fileType string) core.Version {
 	var options []huh.Option[core.Version]
 	for _, vs := range versions {
 		for _, v := range vs {
-			if v.FileType == "zip" {
+			if v.FileType == fileType {
 				options = append(options, huh.NewOption(v.Version, v))
 			}
 		}
