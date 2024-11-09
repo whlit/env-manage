@@ -77,7 +77,7 @@ func appendEnvs(envs, items []string) []string {
 
 func getOldEnvs() []string {
 	envsPath := filepath.Join(common_util.GetRootDir(), "config", "env.sh")
-	file, err := os.OpenFile(envsPath, os.O_RDONLY, 0644)
+	file, err := os.OpenFile(envsPath, os.O_RDONLY|os.O_CREATE, 0644)
 	if err != nil {
 		logger.Error("打开文件失败：", err)
 	}
