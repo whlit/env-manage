@@ -1,39 +1,44 @@
 package util
 
-import (
-	"testing"
-)
+import "testing"
 
-func TestTablePrint(t *testing.T) {
-	table := &Table{
-		Columns: []string{"name", "age"},
+func TestCompareVersion(t *testing.T) {
+	// 正常长度比较
+	if CompareVersion("1.0.0", "1.0.0") != 0 {
+		t.Errorf("util.CompareVersion(\"1.0.0\", \"1.0.0\") != 0")
 	}
-	table.Add(map[string]string{
-		"name": "John",
-		"age":  "30",
-	})
-	table.Add(map[string]string{
-		"name": "Janeh",
-		"age":  "25",
-	})
-	strs := table.Sprintf()
+	if CompareVersion("1.0.0", "1.0.1") != -1 {
+		t.Errorf("util.CompareVersion(\"1.0.0\", \"1.0.1\") != -1")
+	}
+	if CompareVersion("1.0.1", "1.0.0") != 1 {
+		t.Errorf("util.CompareVersion(\"1.0.1\", \"1.0.0\") != 1")
+	}
+	// 缺位比较
+	if CompareVersion("1.0", "1.0.0") != 0 {
+		t.Error("util.CompareVersion(\"1.0\", \"1.0.0\") != 0")
+	}
+	if CompareVersion("1.0.0", "1.0") != 0 {
+		t.Error("util.CompareVersion(\"1.0.0\", \"1.0\") != 0")
+	}
+	if CompareVersion("1", "1.0.0") != 0 {
+		t.Error("util.CompareVersion(\"1\", \"1.0.0\") != 0")
+	}
+	// 不同量级比较
+	if CompareVersion("10.0.0", "1.0.0") != 1 {
+		t.Error("util.CompareVersion(\"10.0.0\", \"1.0.0\") != 1")
+	}
+	// 其他字符比较
+	if CompareVersion("1a.0.0", "1.0.0") != 0 {
+		t.Error("util.CompareVersion(\"1a.0.0\", \"1.0.0\") != 0")
+	}
+	if CompareVersion("1.0.0a", "1.0.0") != 0 {
+		t.Error("util.CompareVersion(\"1.0.0a\", \"1.0.0\") != 0")
+	}
+	if CompareVersion("a1.0.0", "1.0.0") != 0 {
+		t.Error("util.CompareVersion(\"a1.0.0\", \"1.0.0\") != 0")
+	}
+	if CompareVersion("1.0.0", "a1.0.0") != 0 {
+		t.Error("util.CompareVersion(\"1.0.0\", \"a1.0.0\") != 0")
+	}
 
-	if len(strs) != 3 {
-		t.Log(strs)
-		t.Error("util.Table.Sprintf() 生成的条目数量错误")
-	}
-	if strs[0] != "name    age   " {
-		t.Log(strs[0])
-		t.Error("util.Table.Sprintf() 生成的Lable有误")
-	}
-
-	if strs[1] != "John    30    " {
-		t.Log(strs[0])
-		t.Error("util.Table.Sprintf() 生成的Lable有误")
-	}
-
-	if strs[2] != "Janeh   25    " {
-		t.Log(strs[0])
-		t.Error("util.Table.Sprintf() 生成的Lable有误")
-	}
 }
