@@ -19,4 +19,6 @@ if [[ -z $(grep "VM_HOME" $HOME/.bashrc) ]] ; then
     echo "[[ -s "'$VM_HOME'"/config/env.sh ]] && source "'$VM_HOME'"/config/env.sh" >> $HOME/.bashrc
 fi
 
-source $HOME/.bashrc
+echo "vm installed successfully"
+echo "Please restart your terminal"
+echo "or run 'source ~/.bashrc'"
