@@ -1,7 +1,9 @@
 package util
 
 import (
+	"archive/tar"
 	"archive/zip"
+	"compress/gzip"
 	"io"
 	"net/http"
 	"os"
@@ -121,6 +123,53 @@ func Unzip(zipPath, dir string) error {
 		err := extractAndWriteFile(f)
 		if err != nil {
 			return err
+		}
+	}
+
+	return nil
+}
+
+func UnTarGz(tarGzPath, dir string) error {
+	file, err := os.Open(tarGzPath)
+	if err != nil {
+		logger.Error("打开文件失败", err)
+	}
+	defer file.Close()
+
+	gzipReader, err := gzip.NewReader(file)
+	if err != nil {
+		logger.Error("读取文件失败", err)
+	}
+	defer gzipReader.Close()
+
+	tarReader := tar.NewReader(gzipReader)
+
+	os.MkdirAll(dir, 0755)
+
+	for {
+		header, err := tarReader.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			logger.Error("读取文件失败", err)
+		}
+
+		if header.Typeflag == tar.TypeDir {
+			os.MkdirAll(filepath.Join(dir, header.Name), 0755)
+			continue
+		}
+
+		filePath := filepath.Join(dir, header.Name)
+		file, err := os.Create(filePath)
+		if err != nil {
+			logger.Error("创建文件失败", err)
+		}
+		defer file.Close()
+
+		_, err = io.Copy(file, tarReader)
+		if err != nil {
+			logger.Error("复制文件失败", err)
 		}
 	}
 

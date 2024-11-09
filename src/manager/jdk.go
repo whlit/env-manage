@@ -47,7 +47,13 @@ func (m *JdkEnvManager) Install() {
 	if err != nil {
 		logger.Error("解析JDK版本信息失败", err, string(data))
 	}
-	version := m.selectVersion(versions)
+	selectFileType := "zip"
+	if os == "windows" {
+		selectFileType = "zip"
+	} else if os == "linux" {
+		selectFileType = "tar.gz"
+	}
+	version := m.selectVersion(versions, selectFileType)
 	version.App = m.Name
 
 	err = version.Download()
@@ -55,7 +61,11 @@ func (m *JdkEnvManager) Install() {
 		logger.Error("下载JDK版本失败", err)
 	}
     versionPath := version.GetVersionsPath()
-	err = util.Unzip(version.GetDownloadFilePath(), versionPath)
+	if version.FileType == "zip" {
+		err = util.Unzip(version.GetDownloadFilePath(), versionPath)
+	} else if version.FileType == "tar.gz" {
+		err = util.UnTarGz(version.GetDownloadFilePath(), versionPath)
+	}
 	if err != nil {
 		logger.Error("解压失败：", err)
 	}
@@ -68,11 +78,11 @@ func (m *JdkEnvManager) Install() {
 	}
 }
 
-func (m *JdkEnvManager) selectVersion(versions map[string][]core.Version) core.Version {
+func (m *JdkEnvManager) selectVersion(versions map[string][]core.Version, fileType string) core.Version {
 	var options []huh.Option[core.Version]
 	for _, vs := range versions {
 		for _, v := range vs {
-			if v.FileType == "zip" {
+			if v.FileType == fileType {
 				options = append(options, huh.NewOption(v.Version, v))
 			}
 		}
