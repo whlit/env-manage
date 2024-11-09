@@ -68,7 +68,7 @@ func (m *EnvManager) Add(name string, path string) {
 // 移除版本
 
 func (m *EnvManager) Remove() {
-	if m.Versions == nil || len(m.Versions) == 0 {
+	if len(m.Versions) == 0 {
 		logger.Info("未添加任何版本")
 		return
 	}
@@ -98,7 +98,7 @@ func (m *EnvManager) Remove() {
 
 // 使用版本
 func (m *EnvManager) Use() (string, string, error) {
-	if m.Versions == nil || len(m.Versions) == 0 {
+	if len(m.Versions) == 0 {
 		return "", "", errors.New("未添加任何版本")
 	}
 	// 选择版本

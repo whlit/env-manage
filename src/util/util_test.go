@@ -42,3 +42,19 @@ func TestCompareVersion(t *testing.T) {
 	}
 
 }
+
+func TestAppendOrUpdateSlice(t *testing.T) {
+	slice := []string{"a", "bb", "ccc"}
+	slice2 := AppendOrUpdateSlice(slice, "dd", func(i int) bool {
+		return len(slice[i]) == len("dd")
+	})
+	if len(slice2) != 3 || slice2[1] != "dd" {
+		t.Error("Update slice error")
+	}
+	slice3 := AppendOrUpdateSlice(slice, "dddd", func(i int) bool {
+		return len(slice[i]) == len("dddd")
+	})
+	if len(slice3) != 4 || slice3[1] != "dd" || slice3[3] != "dddd" {
+		t.Error("Append slice error")
+	}
+}

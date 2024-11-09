@@ -79,7 +79,7 @@ func (m *JdkEnvManager) Install() {
 		logger.Error("解压失败：", err)
 	}
 	if mg, ok := core.GlobalConfig.Managers[m.Name]; ok {
-		mg.Versions = append(mg.Versions, version)
+		mg.Versions = util.AppendOrUpdateSlice(mg.Versions, version, func(i int) bool { return mg.Versions[i].Version == version.Version })
 		core.GlobalConfig.Managers[m.Name] = mg
 		core.SaveConfig()
 		logger.Info("安装成功")

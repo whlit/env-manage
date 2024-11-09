@@ -234,3 +234,13 @@ func CompareVersion(v1, v2 string) int {
 	}
 	return 0
 }
+
+func AppendOrUpdateSlice[T any](slice []T, item T, eq func(int) bool) []T {
+	for i := range slice {
+		if eq(i) {
+			slice[i] = item
+			return slice
+		}
+	}
+	return append(slice, item)
+}
