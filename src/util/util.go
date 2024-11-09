@@ -161,7 +161,7 @@ func UnTarGz(tarGzPath, dir string) error {
 		}
 
 		filePath := filepath.Join(dir, header.Name)
-		file, err := os.Create(filePath)
+		file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, header.FileInfo().Mode())
 		if err != nil {
 			logger.Error("创建文件失败", err)
 		}

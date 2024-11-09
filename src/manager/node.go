@@ -3,6 +3,7 @@ package manager
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
 	"runtime"
 	"sort"
@@ -37,8 +38,8 @@ func NewManagerForNode() core.EnvManager {
 }
 
 func (m *NodeEnvManager) Install() {
-    os, arch := m.getOsAndArch()
-    data, err := util.Get(fmt.Sprintf("https://raw.githubusercontent.com/whlit/versions/refs/heads/main/versions/node/node-%s-%s.version.json", os, arch))
+    sys_os, sys_arch := m.getOsAndArch()
+    data, err := util.Get(fmt.Sprintf("https://raw.githubusercontent.com/whlit/versions/refs/heads/main/versions/node/node-%s-%s.version.json", sys_os, sys_arch))
     if err != nil {
         logger.Error("获取Node版本信息失败", err)
     }
@@ -48,9 +49,9 @@ func (m *NodeEnvManager) Install() {
 		logger.Error("解析Node版本信息失败", err, string(data))
 	}
 	selectFileType := "zip"
-	if os == "windows" {
+	if sys_os == "windows" {
 		selectFileType = "zip"
-	} else if os == "linux" {
+	} else if sys_os == "linux" {
 		selectFileType = "tar.gz"
 	}
 	version := m.selectVersion(versions, selectFileType)
@@ -61,6 +62,14 @@ func (m *NodeEnvManager) Install() {
 		logger.Error("下载Node版本失败", err)
 	}
     versionPath := version.GetVersionsPath()
+	version.Path = filepath.Join(versionPath, version.FileName[:len(version.FileName)-len(version.FileType)-1])
+	// 检查是否已经安装, 已安装则删除
+	if util.FileExists(version.Path) {
+		err = os.RemoveAll(versionPath)
+		if err != nil {
+			logger.Error("删除目录失败", err)
+		}
+	}
 	if version.FileType == "zip" {
 		err = util.Unzip(version.GetDownloadFilePath(), versionPath)
 	} else if version.FileType == "tar.gz" {
@@ -70,7 +79,6 @@ func (m *NodeEnvManager) Install() {
 		logger.Error("解压失败：", err)
 	}
 	if mg, ok := core.GlobalConfig.Managers[m.Name]; ok {
-        version.Path = filepath.Join(versionPath, version.FileName[:len(version.FileName)-len(version.FileType)-1])
 		mg.Versions = append(mg.Versions, version)
 		core.GlobalConfig.Managers[m.Name] = mg
 		core.SaveConfig()
