@@ -1,7 +1,6 @@
 package core
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -17,9 +16,9 @@ type IEnvManager interface {
 	List()
 	Add(name string, path string)
 	Remove()
-	Use() (string, string, error)
+	Use()
 	Install()
-	GetEnvs() map[string][]string
+	InitEnvs()
 }
 
 type EnvManager struct {
@@ -97,9 +96,10 @@ func (m *EnvManager) Remove() {
 }
 
 // 使用版本
-func (m *EnvManager) Use() (string, string, error) {
+func (m *EnvManager) Use() {
 	if len(m.Versions) == 0 {
-		return "", "", errors.New("未添加任何版本")
+		logger.Info("未添加任何版本")
+		return
 	}
 	// 选择版本
 	var version Version
@@ -114,7 +114,10 @@ func (m *EnvManager) Use() (string, string, error) {
 	if util.FileExists(path) {
 		os.Remove(path)
 	}
-    return path, version.Path, nil
+	err := util.CreateLink(path, version.Path)
+	if err != nil {
+		logger.Error("创建链接失败：", err)
+	}
 }
 
 // 安装
@@ -123,19 +126,10 @@ func (m *EnvManager) Install() {
 }
 
 // 创建环境变量
-func (m *EnvManager) GetEnvs() map[string][]string {
+func (m *EnvManager) InitEnvs() {
     if _, ok := m.Envs[runtime.GOOS]; ok {
-        return m.Envs[runtime.GOOS]
+		util.SetEnvs(m.Envs[runtime.GOOS])
+		return
     }
     logger.Error("暂不支持自动创建该系统环境变量，请手动设置")
-    return nil
-}
-
-func RegisterEnvManager(manager EnvManager) {
-	_, ok := GlobalConfig.Managers[manager.Name]
-	if ok {
-		return
-	}
-	GlobalConfig.Managers[manager.Name] = manager
-	SaveConfig()
 }

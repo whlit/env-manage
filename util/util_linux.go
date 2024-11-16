@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/whlit/env-manage/logger"
-	common_util "github.com/whlit/env-manage/util"
 )
 
 // 创建文件夹链接
@@ -51,7 +50,7 @@ func SetEnvs(envs map[string][]string) {
 		}
 		newEnvs = append(newEnvs, fmt.Sprintf("export %s=%s", k, strings.Join(v, ":")))
 	}
-	err := os.WriteFile(filepath.Join(common_util.GetRootDir(), "config", "env.sh"), []byte(strings.Join(newEnvs, "\n")), 0644)
+	err := os.WriteFile(filepath.Join(GetRootDir(), "config", "env.sh"), []byte(strings.Join(newEnvs, "\n")), 0644)
 	if err != nil {
 		logger.Error("写入文件失败：", err)
 	}
@@ -76,7 +75,7 @@ func appendEnvs(envs, items []string) []string {
 }
 
 func getOldEnvs() []string {
-	envsPath := filepath.Join(common_util.GetRootDir(), "config", "env.sh")
+	envsPath := filepath.Join(GetRootDir(), "config", "env.sh")
 	file, err := os.OpenFile(envsPath, os.O_RDONLY|os.O_CREATE, 0644)
 	if err != nil {
 		logger.Error("打开文件失败：", err)

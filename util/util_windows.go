@@ -1,3 +1,6 @@
+//go:build windows
+// +build windows
+
 package util
 
 import (
@@ -12,7 +15,7 @@ import (
 )
 
 
-func SetWindowsEnvs(envs map[string][]string) {
+func SetEnvs(envs map[string][]string) {
     for k, v := range envs {
         if k == "PATH" {
             pathValue, err := getRegValue("Path")
@@ -27,7 +30,7 @@ func SetWindowsEnvs(envs map[string][]string) {
     }
 }
 
-func RemoveWindowsEnv(name string) error{
+func RemoveEnv(name string) error{
     oldValue, err := getRegValue(name)
     if err != nil {
         return err
@@ -38,6 +41,36 @@ func RemoveWindowsEnv(name string) error{
     _, err = run("reg", nil, "delete", "HKEY_CURRENT_USER\\Environment", "/v", name, "/f")
     logger.Infof("删除环境变量:%s, \n    值:'%s'", name, oldValue)
     return err
+}
+
+// 创建文件夹链接
+// linkPath 要创建的链接文件夹路径
+// target 目标文件夹路径
+// windows下使用目录链接 即 mklink /J linkPath target
+func CreateLink(linkPath, target string) error {
+    _, err := run("cmd", nil, "/C", "mklink", "/J", linkPath, target)
+    return err
+}
+
+// 从PATH中移除目录
+func RemoveFromPath(value string) {
+	pathEnv, err := getRegValue("Path")
+	if err != nil {
+		logger.Error("获取Path环境变量失败", err)
+	}
+	paths := strings.Split(pathEnv, ";")
+	var newPaths []string
+	var existed = false
+	for _, item := range paths {
+		if item == value {
+			existed = true
+			continue
+		}
+		newPaths = append(newPaths, item)
+	}
+	if existed {
+		setRegValue("Path", strings.Join(newPaths, ";"))
+	}
 }
 
 // 获取Windows注册表项
@@ -91,14 +124,6 @@ func appendEnvs(envs, items []string) []string {
     return res
 }
 
-// 创建文件夹链接
-// linkPath 要创建的链接文件夹路径
-// target 目标文件夹路径
-// windows下使用目录链接 即 mklink /J linkPath target
-func CreateLink(linkPath, target string) error {
-    _, err := run("cmd", nil, "/C", "mklink", "/J", linkPath, target)
-    return err
-}
 
 
 // 运行命令
@@ -116,24 +141,3 @@ func run(name string, dir *string, arg ...string) (bool, error) {
 	return true, nil
 }
 
-
-// 从PATH中移除目录
-func RemoveFromPath(value string) {
-	pathEnv, err := getRegValue("Path")
-	if err != nil {
-		logger.Error("获取Path环境变量失败", err)
-	}
-	paths := strings.Split(pathEnv, ";")
-	var newPaths []string
-	var existed = false
-	for _, item := range paths {
-		if item == value {
-			existed = true
-			continue
-		}
-		newPaths = append(newPaths, item)
-	}
-	if existed {
-		setRegValue("Path", strings.Join(newPaths, ";"))
-	}
-}
