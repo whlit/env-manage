@@ -31,7 +31,7 @@ func NewManagerForNode() core.EnvManager {
 
 	linuxEnv := make(map[string][]string)
 	linuxEnv["NODE_HOME"] = []string{filepath.Join(util.GetRootDir(), core.GlobalConfig.RuntimeDir, m.Name)}
-	linuxEnv["PATH"] = []string{"$NODE_HOME"}
+	linuxEnv["PATH"] = []string{"$NODE_HOME/bin"}
 	m.Envs["linux"] = linuxEnv
 
 	return m
