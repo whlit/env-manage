@@ -9,7 +9,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/charmbracelet/huh"
 	"github.com/whlit/env-manage/core"
 	"github.com/whlit/env-manage/logger"
 	"github.com/whlit/env-manage/util"
@@ -17,6 +16,12 @@ import (
 
 type JdkEnvManager struct {
 	core.EnvManager
+}
+
+type OsMsg struct {
+	Os string
+	Arch string
+	FileType string
 }
 
 func NewManagerForJdk() core.EnvManager {
@@ -38,8 +43,8 @@ func NewManagerForJdk() core.EnvManager {
 }
 
 func (m *JdkEnvManager) Install() {
-    sys_os, sys_arch := m.getOsAndArch()
-	data, err := util.Get(fmt.Sprintf("https://raw.githubusercontent.com/whlit/versions/refs/heads/main/versions/jdk/latest/jdk-%s-%s.version.json", sys_os, sys_arch))
+	osMsg := m.getOsMsg()
+	data, err := util.Get(fmt.Sprintf("https://raw.githubusercontent.com/whlit/versions/refs/heads/main/versions/jdk/latest/jdk-%s-%s.version.json", osMsg.Os, osMsg.Arch))
 	if err != nil {
 		logger.Error("获取JDK版本信息失败", err)
 	}
@@ -48,13 +53,10 @@ func (m *JdkEnvManager) Install() {
 	if err != nil {
 		logger.Error("解析JDK版本信息失败", err, string(data))
 	}
-	selectFileType := "zip"
-	if sys_os == "windows" {
-		selectFileType = "zip"
-	} else if sys_os == "linux" {
-		selectFileType = "tar.gz"
+	version, ok := selectVersion(versions, osMsg.FileType)
+	if !ok {
+		return
 	}
-	version := m.selectVersion(versions, selectFileType)
 	version.App = m.Name
 
 	err = version.Download()
@@ -86,25 +88,23 @@ func (m *JdkEnvManager) Install() {
 	}
 }
 
-func (m *JdkEnvManager) selectVersion(versions map[string][]core.Version, fileType string) core.Version {
-	var options []huh.Option[core.Version]
+func selectVersion(versions map[string][]core.Version, fileType string) (core.Version, bool) {
+	var items []core.Version
 	for _, vs := range versions {
 		for _, v := range vs {
 			if v.FileType == fileType {
-				options = append(options, huh.NewOption(v.Version, v))
+				items = append(items, v)
 			}
 		}
 	}
-    sort.SliceStable(options, func(i, j int) bool {
-        return util.CompareVersion(options[i].Value.Version, options[j].Value.Version) > 0
-    })
-    var version core.Version
-	huh.NewSelect[core.Version]().Options(options...).Value(&version).Run()
-	return version
+	sort.SliceStable(items, func(i, j int) bool {
+		return util.CompareVersion(items[i].Version, items[j].Version) > 0
+	})
+	return util.Select(func(v core.Version) string { return v.Version }, items...)
 }
 
-func (m *JdkEnvManager) getOsAndArch() (string, string) {
-    os := strings.ToLower(runtime.GOOS)
+func (m *JdkEnvManager) getOsMsg() OsMsg {
+	os := strings.ToLower(runtime.GOOS)
 	switch os {
 	case "windows", "win":
 		os = "windows"
@@ -129,5 +129,12 @@ func (m *JdkEnvManager) getOsAndArch() (string, string) {
     default:
         logger.Error("获取操作系统架构失败，或者不支持该系统架构", arch)
     }
-    return os, arch
+
+	fileType := "zip"
+	if os == "windows" {
+		fileType = "zip"
+	} else if os == "linux" {
+		fileType = "tar.gz"
+	}
+	return OsMsg{os, arch, fileType}
 }

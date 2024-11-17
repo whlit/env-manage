@@ -6,10 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"sort"
 	"strings"
 
-	"github.com/charmbracelet/huh"
 	"github.com/whlit/env-manage/core"
 	"github.com/whlit/env-manage/logger"
 	"github.com/whlit/env-manage/util"
@@ -38,8 +36,8 @@ func NewManagerForNode() core.EnvManager {
 }
 
 func (m *NodeEnvManager) Install() {
-    sys_os, sys_arch := m.getOsAndArch()
-    data, err := util.Get(fmt.Sprintf("https://raw.githubusercontent.com/whlit/versions/refs/heads/main/versions/node/node-%s-%s.version.json", sys_os, sys_arch))
+	osMsg := m.getOsMsg()
+    data, err := util.Get(fmt.Sprintf("https://raw.githubusercontent.com/whlit/versions/refs/heads/main/versions/node/node-%s-%s.version.json", osMsg.Os, osMsg.Arch))
     if err != nil {
         logger.Error("获取Node版本信息失败", err)
     }
@@ -48,13 +46,10 @@ func (m *NodeEnvManager) Install() {
 	if err != nil {
 		logger.Error("解析Node版本信息失败", err, string(data))
 	}
-	selectFileType := "zip"
-	if sys_os == "windows" {
-		selectFileType = "zip"
-	} else if sys_os == "linux" {
-		selectFileType = "tar.gz"
+	version, ok := selectVersion(versions, osMsg.FileType)
+	if !ok {
+		return
 	}
-	version := m.selectVersion(versions, selectFileType)
 	version.App = m.Name
 
 	err = version.Download()
@@ -85,25 +80,10 @@ func (m *NodeEnvManager) Install() {
 		logger.Info("安装成功")
 	}
 }
-func (m *NodeEnvManager) selectVersion(versions map[string][]core.Version, fileType string) core.Version {
-	var options []huh.Option[core.Version]
-	for _, vs := range versions {
-		for _, v := range vs {
-			if v.FileType == fileType {
-				options = append(options, huh.NewOption(v.Version, v))
-			}
-		}
-	}
-	var version core.Version
-    sort.SliceStable(options, func(i, j int) bool {
-        return util.CompareVersion(options[i].Value.Version, options[j].Value.Version) > 0
-    })
-	huh.NewSelect[core.Version]().Options(options...).Value(&version).Run()
-	return version
-}
 
-func (m *NodeEnvManager) getOsAndArch() (string, string) {
-    os := strings.ToLower(runtime.GOOS)
+
+func (m *NodeEnvManager) getOsMsg() OsMsg {
+	os := strings.ToLower(runtime.GOOS)
 	switch os {
 	case "windows", "win":
 		os = "win"
@@ -130,5 +110,12 @@ func (m *NodeEnvManager) getOsAndArch() (string, string) {
             logger.Error("获取操作系统架构失败，或者不支持该系统架构", arch)
         }
     }
-    return os, arch
+
+	fileType := "zip"
+	if os == "windows" {
+		fileType = "zip"
+	} else if os == "linux" {
+		fileType = "tar.gz"
+	}
+	return OsMsg{os, arch, fileType}
 }

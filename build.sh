@@ -1,6 +1,6 @@
 #! /bin/bash
 
-root=$PWD
+root=$(cd "$(dirname "$0")"; pwd)
 
 if [[ -d $root/dist ]]; then
     rm -rf $root/dist

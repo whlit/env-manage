@@ -5,9 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strings"
-
-	"github.com/charmbracelet/huh"
 	"github.com/whlit/env-manage/logger"
 	"github.com/whlit/env-manage/util"
 )
@@ -50,7 +47,7 @@ func (m *EnvManager) Add(name string, path string) {
 	}
 	for _, v := range m.Versions {
 		if v.Version == name {
-			logger.Warn("版本已存在: ", name, " -> ", v.Path)
+			logger.Error("版本已存在: ", name, " -> ", v.Path)
 			return
 		}
 	}
@@ -72,16 +69,8 @@ func (m *EnvManager) Remove() {
 		return
 	}
 	// 选择版本
-	var version Version
-	var options []huh.Option[Version]
-	for _, v := range m.Versions {
-		options = append(options, huh.NewOption(v.Version, v))
-	}
-	huh.NewSelect[Version]().Options(options...).Value(&version).Run()
-	var confirm bool
-	huh.NewConfirm().Title(strings.Join([]string{"确认删除 ", version.Version, " ?"}, "")).Value(&confirm).Run()
-	if confirm {
-        if mg, ok := GlobalConfig.Managers[m.Name]; ok {
+	if version, ok := util.SelectWithConfirm(func (v Version) string { return v.Version }, m.Versions...); ok {
+		if mg, ok := GlobalConfig.Managers[m.Name]; ok {
             var vs []Version
             for _, v := range mg.Versions {
                 if v.Version != version.Version {
@@ -102,13 +91,10 @@ func (m *EnvManager) Use() {
 		return
 	}
 	// 选择版本
-	var version Version
-	var options []huh.Option[Version]
-	for _, v := range m.Versions {
-		options = append(options, huh.NewOption(v.Version, v))
+	version, ok := util.Select(func(v Version) string { return v.Version }, m.Versions...)
+	if !ok {
+		return
 	}
-	huh.NewSelect[Version]().Options(options...).Value(&version).Run()
-
 	path := filepath.Join(util.GetRootDir(), GlobalConfig.RuntimeDir, m.Name)
 
 	if util.FileExists(path) {
