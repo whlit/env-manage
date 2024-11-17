@@ -9,9 +9,9 @@ import (
 	"github.com/whlit/env-manage/manager"
 )
 
-
-
-var managers = make(map[string]core.IEnvManager)
+func init(){
+    manager.RegisterManagers()
+}
 
 func main() {
 	args := os.Args[1:]
@@ -20,13 +20,11 @@ func main() {
 		return
 	}
 
-	initManagers()
-
-	if m, ok := managers[args[0]]; ok {
-		manageEnv(args[1], m, args[2:])
-	} else {
-		help()
-	}
+    if manager := core.GlobalConfig.GetManager(args[0]); manager != nil {
+        manageEnv(args[1], manager, args[2:])
+    } else {
+        help()
+    }
 }
 
 func manageEnv(action string, manager core.IEnvManager, args []string) {
@@ -44,7 +42,7 @@ func manageEnv(action string, manager core.IEnvManager, args []string) {
 		manager.List()
 	case "install":
 		manager.Install()
-    case "init":
+	case "init":
 		manager.InitEnvs()
 	default:
 		help()
@@ -64,37 +62,5 @@ func help() {
 	fmt.Println("  list                     查询所有已添加的版本管理")
 	fmt.Println("  use                      使用版本")
 	fmt.Println("  install                  在线安装新版本,自定义的版本管理不支持")
-    fmt.Println("  init                     初始化环境变量,创建完成后需要重启命令行才能生效")
-}
-
-func initManagers() {
-	for name, manager := range core.GlobalConfig.Managers {
-		managers[name] = &manager
-	}
-	if m, ok := core.GlobalConfig.Managers["jdk"]; ok {
-		managers["jdk"] = &manager.JdkEnvManager{EnvManager: m}
-	} else {
-		m := manager.NewManagerForJdk()
-		managers["jdk"] = &manager.JdkEnvManager{EnvManager: m}
-		core.GlobalConfig.Managers["jdk"] = m
-		core.SaveConfig()
-	}
-
-    if m, ok := core.GlobalConfig.Managers["node"]; ok {
-        managers["node"] = &manager.NodeEnvManager{EnvManager: m}
-    } else {
-        m := manager.NewManagerForNode()
-        managers["node"] = &manager.NodeEnvManager{EnvManager: m}
-        core.GlobalConfig.Managers["node"] = m
-        core.SaveConfig()
-    }
-
-    if m, ok := core.GlobalConfig.Managers["maven"]; ok {
-        managers["maven"] = &manager.MavenEnvManager{EnvManager: m}
-    } else {
-        m := manager.NewManagerForMaven()
-        managers["maven"] = &manager.MavenEnvManager{EnvManager: m}
-        core.GlobalConfig.Managers["maven"] = m
-        core.SaveConfig()
-    }
+	fmt.Println("  init                     初始化环境变量,创建完成后需要重启命令行才能生效")
 }

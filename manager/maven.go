@@ -2,7 +2,6 @@ package manager
 
 import (
 	"encoding/json"
-	"fmt"
 	"path/filepath"
 	"github.com/whlit/env-manage/core"
 	"github.com/whlit/env-manage/logger"
@@ -13,22 +12,25 @@ type MavenEnvManager struct {
     core.EnvManager
 }
 
-func NewManagerForMaven() core.EnvManager {
-	var m core.EnvManager
-	m.Name = "maven"
-	m.Envs = make(map[string]map[string][]string)
+func init() {
+    name := "maven"
+    core.GlobalConfig.Register(name, func(em core.EnvManager) core.IEnvManager {return &JdkEnvManager{EnvManager: em}}, func() core.EnvManager {
+        var m core.EnvManager
+        m.Name = name
+        m.Envs = make(map[string]map[string][]string)
 
-	windowsEnv := make(map[string][]string)
-	windowsEnv["M2_HOME"] = []string{filepath.Join(util.GetRootDir(), core.GlobalConfig.RuntimeDir, m.Name)}
-	windowsEnv["PATH"] = []string{"%M2_HOME%\\bin"}
-	m.Envs["windows"] = windowsEnv
+        windowsEnv := make(map[string][]string)
+        windowsEnv["M2_HOME"] = []string{filepath.Join(util.GetRootDir(), core.GlobalConfig.RuntimeDir, m.Name)}
+        windowsEnv["PATH"] = []string{"%M2_HOME%\\bin"}
+        m.Envs["windows"] = windowsEnv
 
-	linuxEnv := make(map[string][]string)
-	linuxEnv["M2_HOME"] = []string{filepath.Join(util.GetRootDir(), core.GlobalConfig.RuntimeDir, m.Name)}
-	linuxEnv["PATH"] = []string{"$M2_HOME/bin"}
-	m.Envs["linux"] = linuxEnv
+        linuxEnv := make(map[string][]string)
+        linuxEnv["M2_HOME"] = []string{filepath.Join(util.GetRootDir(), core.GlobalConfig.RuntimeDir, m.Name)}
+        linuxEnv["PATH"] = []string{"$M2_HOME/bin"}
+        m.Envs["linux"] = linuxEnv
 
-	return m
+        return m
+    })
 }
 
 func (m *MavenEnvManager) Install() {
@@ -56,11 +58,5 @@ func (m *MavenEnvManager) Install() {
 	if err != nil {
 		logger.Error("解压失败：", err)
 	}
-	if mg, ok := core.GlobalConfig.Managers[m.Name]; ok {
-        version.Path = filepath.Join(versionPath, fmt.Sprintf("apache-maven-%s", version.Version))
-		mg.Versions = append(mg.Versions, version)
-		core.GlobalConfig.Managers[m.Name] = mg
-		core.SaveConfig()
-		logger.Info("安装成功")
-	}
+    core.GlobalConfig.AddVersion(m.Name, version)
 }

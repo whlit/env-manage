@@ -5,10 +5,29 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
-var infoLogger *log.Logger
-var errorLogger *log.Logger
+var (
+	debugLogger *Logger
+	infoLogger  *Logger
+	warnLogger  *Logger
+	errorLogger *Logger
+	level       Level = INFO
+)
+
+const (
+    DEBUG Level = iota
+	INFO
+	WARN
+	ERROR
+)
+
+type Level int
+type Logger struct {
+	Level  Level
+	Logger *log.Logger
+}
 
 func init() {
 	exePath, err := os.Executable()
@@ -24,27 +43,75 @@ func init() {
 		fmt.Println("打开日志文件失败:", err)
 		os.Exit(1)
 	}
-	infoLogger = log.New(file, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
-	errorLogger = log.New(file, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
+	debugLogger = &Logger{Level: DEBUG, Logger: log.New(file, "DEBUG", log.Ldate|log.Ltime|log.Lshortfile)}
+	infoLogger = &Logger{Level: INFO, Logger: log.New(file, "INFO", log.Ldate|log.Ltime|log.Lshortfile)}
+	infoLogger = &Logger{Level: WARN, Logger: log.New(file, "WARN", log.Ldate|log.Ltime|log.Lshortfile)}
+	infoLogger = &Logger{Level: ERROR, Logger: log.New(file, "ERROR", log.Ldate|log.Ltime|log.Lshortfile)}
+}
+
+func (l Level) String() string {
+    switch l {
+    case DEBUG:
+        return "DEBUG"
+    case INFO:
+        return "INFO"
+    case WARN:
+        return "WARN"
+    case ERROR:
+        return "ERROR"
+    default:
+        return ""
+    }
+}
+
+func SetLevel(l string) {
+	switch l {
+    case "DEBUG":
+        level = DEBUG
+    case "INFO":
+        level = INFO
+    case "WARN":
+        level = WARN
+    case "ERROR":
+        level = ERROR
+    }
+}
+
+func (l *Logger) Println(args ...any) {
+	if level > l.Level {
+		return
+	}
+	l.Logger.Println(args...)
+}
+
+func (l *Logger) Printf(format string, args ...any) {
+	if level > l.Level {
+		return
+	}
+	if !strings.HasSuffix(format, "\n") {
+		format = format + "\n"
+	}
+	l.Logger.Printf(format, args...)
+}
+
+
+
+func Debug(v ...any) {
+	debugLogger.Println(v...)
 }
 
 func Infof(format string, v ...any) {
-	fmt.Printf(format, v...)
-	fmt.Println()
 	infoLogger.Printf(format, v...)
 }
 
 func Info(v ...any) {
-	fmt.Println(v...)
 	infoLogger.Println(v...)
 }
 
 func Error(v ...any) {
-	fmt.Println(v...)
-	errorLogger.Fatalln(v...)
+	errorLogger.Println(v...)
 }
 
 func Warn(v ...any) {
-	fmt.Println(v...)
-	infoLogger.Panicln(v...)
+	warnLogger.Println(v...)
 }

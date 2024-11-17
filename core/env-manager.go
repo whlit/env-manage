@@ -22,6 +22,7 @@ type EnvManager struct {
 	Name     string                         `yaml:"name"`     // 名称 唯一 一般是软件名称
 	Envs     map[string]map[string][]string `yaml:"envs"`     // 环境变量
 	Versions []Version                      `yaml:"versions"` // 版本
+    Used     string                         `yaml:"used"`     // 当前使用的版本
 }
 
 // 列出已添加的版本
@@ -54,11 +55,7 @@ func (m *EnvManager) Add(name string, path string) {
 	version := &Version{}
 	version.Version = name
 	version.Path = path
-    if mg, ok := GlobalConfig.Managers[m.Name]; ok {
-        mg.Versions = append(mg.Versions, *version)
-        GlobalConfig.Managers[m.Name] = mg
-        SaveConfig()
-    }
+    GlobalConfig.AddVersion(m.Name, *version)
 }
 
 // 移除版本
@@ -70,17 +67,7 @@ func (m *EnvManager) Remove() {
 	}
 	// 选择版本
 	if version, ok := util.SelectWithConfirm(func (v Version) string { return v.Version }, m.Versions...); ok {
-		if mg, ok := GlobalConfig.Managers[m.Name]; ok {
-            var vs []Version
-            for _, v := range mg.Versions {
-                if v.Version != version.Version {
-                    vs = append(vs, v)
-                }
-            }
-            mg.Versions = vs
-            GlobalConfig.Managers[m.Name] = mg
-            SaveConfig()
-        }
+        GlobalConfig.RemoveVersion(m.Name, version)
 	}
 }
 
@@ -101,6 +88,7 @@ func (m *EnvManager) Use() {
 		os.Remove(path)
 	}
 	err := util.CreateLink(path, version.Path)
+    GlobalConfig.SetUsed(m.Name, version)
 	if err != nil {
 		logger.Error("创建链接失败：", err)
 	}
