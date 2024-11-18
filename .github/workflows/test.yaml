@@ -66,8 +66,7 @@ jobs:
         cd ~/env-manage
         ./install.sh
         source ~/.bashrc
-        echo $VM_HOME
-        echo $PATH
+        cat ~/.bashrc
 
     - name: Cache Download
       uses: actions/cache/save@v4
