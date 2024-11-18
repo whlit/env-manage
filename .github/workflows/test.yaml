@@ -69,7 +69,7 @@ jobs:
     - name: Source bashrc
       shell: source {0}
       run: |
-        source ~/.bashrc
+        ~/.bashrc
 
     - name: Show Env
       run: |
