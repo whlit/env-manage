@@ -1,0 +1,75 @@
+name: test
+
+on:
+  push
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version-file: 'src/go.mod'
+        cache-dependency-path: 'src/go.sum'
+
+    - name: Build
+      run: ./build.sh
+
+    - name: Cache dist
+      uses: actions/cache@v3
+      with:
+        path: |
+          dist/env-manage.tar.gz
+          dist/env-manage.zip
+        key: cache-${{ github.sha }}
+
+  test-on-ubuntu:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Use Dist
+      id: dist-cache
+      uses:  actions/cache/restore@v4
+      with:
+        path: |
+          dist/env-manage.tar.gz
+        key: cache-${{ github.sha }}
+
+    - name: Check cache hit
+      if: steps.dist-cache.outputs.cache-hit != 'true'
+      run: exit 1
+
+    - name: Unpack
+      run: tar -zxvf dist/env-manage.tar.gz -C ~/env-manage
+
+    - name: Use Download
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          ~/env-manage/download
+        key: ${{ runner.os }}-download
+
+    - name: Test Install
+      run: |
+        cd ~/env-manage
+        ./install.sh
+        source ~/.bashrc
+        echo $VM_HOME
+        echo $PATH
+
+    - name: Cache Download
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          ~/env-manage/download
+        key: ${{ runner.os }}-download
+
+
