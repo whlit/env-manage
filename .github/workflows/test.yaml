@@ -65,8 +65,17 @@ jobs:
       run: |
         cd ~/env-manage
         ./install.sh
+
+    - name: Source bashrc
+      shell: source {0}
+      run: |
         source ~/.bashrc
+
+    - name: Show Env
+      run: |
         cat ~/.bashrc
+        echo PATH=$PATH
+        echo VM_HOME=$VM_HOME
 
     - name: Cache Download
       uses: actions/cache/save@v4
