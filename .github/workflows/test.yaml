@@ -65,14 +65,7 @@ jobs:
       run: |
         cd ~/env-manage
         ./install.sh
-
-    - name: Source bashrc
-      shell: source {0}
-      run: |
-        ~/.bashrc
-
-    - name: Show Env
-      run: |
+        source ~/.bashrc
         cat ~/.bashrc
         echo PATH=$PATH
         echo VM_HOME=$VM_HOME
