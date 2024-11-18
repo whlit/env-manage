@@ -23,7 +23,7 @@ jobs:
       run: ./build.sh
 
     - name: Cache dist
-      uses: actions/cache@v3
+      uses: actions/cache/save@v4
       with:
         path: |
           dist/env-manage.tar.gz
