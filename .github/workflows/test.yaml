@@ -41,6 +41,7 @@ jobs:
       with:
         path: |
           dist/env-manage.tar.gz
+          dist/env-manage.zip
         key: cache-${{ github.sha }}
 
     - name: Check cache hit
