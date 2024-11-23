@@ -2,7 +2,9 @@ package manager
 
 import (
 	"encoding/json"
+	"os"
 	"path/filepath"
+
 	"github.com/whlit/env-manage/core"
 	"github.com/whlit/env-manage/logger"
 	"github.com/whlit/env-manage/util"
@@ -14,7 +16,7 @@ type MavenEnvManager struct {
 
 func init() {
     name := "maven"
-    core.GlobalConfig.Register(name, func(em core.EnvManager) core.IEnvManager {return &JdkEnvManager{EnvManager: em}}, func() core.EnvManager {
+    core.GlobalConfig.Register(name, func(em core.EnvManager) core.IEnvManager {return &MavenEnvManager{EnvManager: em}}, func() core.EnvManager {
         var m core.EnvManager
         m.Name = name
         m.Envs = make(map[string]map[string][]string)
@@ -54,6 +56,14 @@ func (m *MavenEnvManager) Install() {
 		logger.Error("下载Maven版本失败", err)
 	}
     versionPath := version.GetVersionsPath()
+	version.Path = filepath.Join(versionPath, version.FileName[:len(version.FileName)-len(version.FileType)-5])
+    // 检查是否已经安装, 已安装则删除
+	if util.FileExists(version.Path) {
+		err = os.RemoveAll(versionPath)
+		if err != nil {
+			logger.Error("删除目录失败", err)
+		}
+	}
 	err = util.Unzip(version.GetDownloadFilePath(), versionPath)
 	if err != nil {
 		logger.Error("解压失败：", err)

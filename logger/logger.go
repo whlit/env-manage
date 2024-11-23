@@ -43,10 +43,10 @@ func init() {
 		fmt.Println("打开日志文件失败:", err)
 		os.Exit(1)
 	}
-	debugLogger = &Logger{Level: DEBUG, Logger: log.New(file, "DEBUG", log.Ldate|log.Ltime|log.Lshortfile)}
-	infoLogger = &Logger{Level: INFO, Logger: log.New(file, "INFO", log.Ldate|log.Ltime|log.Lshortfile)}
-	infoLogger = &Logger{Level: WARN, Logger: log.New(file, "WARN", log.Ldate|log.Ltime|log.Lshortfile)}
-	infoLogger = &Logger{Level: ERROR, Logger: log.New(file, "ERROR", log.Ldate|log.Ltime|log.Lshortfile)}
+	debugLogger = &Logger{Level: DEBUG, Logger: log.New(file, "DEBUG: ", log.Ldate|log.Ltime|log.Lshortfile)}
+	infoLogger = &Logger{Level: INFO, Logger: log.New(file, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)}
+	warnLogger = &Logger{Level: WARN, Logger: log.New(file, "WARN: ", log.Ldate|log.Ltime|log.Lshortfile)}
+	errorLogger = &Logger{Level: ERROR, Logger: log.New(file, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)}
 }
 
 func (l Level) String() string {

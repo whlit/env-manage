@@ -87,6 +87,7 @@ func (m *EnvManager) Use() {
 	if util.FileExists(path) {
 		os.Remove(path)
 	}
+    logger.Debug("创建链接: ", path, " -> ", version.Path)
 	err := util.CreateLink(path, version.Path)
     GlobalConfig.SetUsed(m.Name, version)
 	if err != nil {
@@ -103,6 +104,9 @@ func (m *EnvManager) Install() {
 func (m *EnvManager) InitEnvs() {
     if _, ok := m.Envs[runtime.GOOS]; ok {
 		util.SetEnvs(m.Envs[runtime.GOOS])
+        fmt.Println("Set environment variables successfully")
+        fmt.Println("Please restart your terminal")
+        fmt.Println("Or run `source ~/.bashrc`")
 		return
     }
     logger.Error("暂不支持自动创建该系统环境变量，请手动设置")

@@ -100,8 +100,19 @@ func setRegValue(name string, value string) error {
     if oldValue == value {
         return nil
     }
-	_, err = run("reg", nil, "add", "HKEY_CURRENT_USER\\Environment", "/v", name, "/t", "REG_SZ", "/d", value, "/f")
+    splitIndex := strings.Index(value, ";")
+    if splitIndex != -1 && len(value) > splitIndex + 1 {
+        value = value + ";"
+    }
+    regType := "REG_SZ"
+    if (strings.Contains(value, "%")) {
+        regType = "REG_EXPAND_SZ"
+    }
 	logger.Infof("写入环境变量:%s, \n    旧值:'%s',  \n    新值:'%s'", name, oldValue, value)
+	_, err = run("reg", nil, "add", "HKEY_CURRENT_USER\\Environment", "/v", name, "/t", regType, "/d", value, "/f")
+    if err != nil {
+        logger.Error("环境变量写入失败")
+    }
     return err
 }
 

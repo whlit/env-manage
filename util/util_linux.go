@@ -50,6 +50,7 @@ func SetEnvs(envs map[string][]string) {
 		}
 		newEnvs = append(newEnvs, fmt.Sprintf("export %s=%s", k, strings.Join(v, ":")))
 	}
+    logger.Infof("写入环境变量:    旧值:[%s],    新值:[%s]", strings.Join(oldEnvs, ","), strings.Join(newEnvs, ","))
 	err := os.WriteFile(filepath.Join(GetRootDir(), "config", "env.sh"), []byte(strings.Join(newEnvs, "\n")), 0644)
 	if err != nil {
 		logger.Error("写入文件失败：", err)
